@@ -2,9 +2,17 @@
 import { fmt, valueToColor } from './utils.js';
 
 const FUNCTIONS = {
-  relu: { fn: x => Math.max(0, x), label: 'ReLU(x) = max(0, x)', color: '#26A69A' },
-  sigmoid: { fn: x => 1 / (1 + Math.exp(-x)), label: 'Sigmoid(x) = 1/(1+e^-x)', color: '#FFB74D' },
-  tanh: { fn: x => Math.tanh(x), label: 'Tanh(x)', color: '#CE93D8' }
+  relu: {
+    fn: (x) => Math.max(0, x),
+    label: 'ReLU(x) = max(0, x)',
+    color: '#26A69A',
+  },
+  sigmoid: {
+    fn: (x) => 1 / (1 + Math.exp(-x)),
+    label: 'Sigmoid(x) = 1/(1+e^-x)',
+    color: '#FFB74D',
+  },
+  tanh: { fn: (x) => Math.tanh(x), label: 'Tanh(x)', color: '#CE93D8' },
 };
 
 let currentFn = 'relu';
@@ -14,7 +22,7 @@ const gridInput = [
   [1.0, -0.5, -1.8, 0.7, -0.3],
   [-3.0, 2.1, 0.0, -0.8, 1.5],
   [0.5, -1.0, 2.8, -2.2, 0.1],
-  [-0.7, 1.3, -0.1, 3.0, -1.5]
+  [-0.7, 1.3, -0.1, 3.0, -1.5],
 ];
 
 export function initActivation() {
@@ -24,13 +32,31 @@ export function initActivation() {
 }
 
 function setupTabs() {
-  document.querySelectorAll('#act-tabs .tab-btn').forEach(btn => {
+  const visited = new Set();
+  document.querySelectorAll('#act-tabs .tab-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('#act-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+      document
+        .querySelectorAll('#act-tabs .tab-btn')
+        .forEach((b) => b.classList.remove('active'));
       btn.classList.add('active');
       currentFn = btn.dataset.act;
       drawGraph();
       drawGrids();
+      // Sync code snippet
+      const codeEl = document.getElementById('act-code');
+      if (codeEl) {
+        const codeMap = {
+          relu: `import torch.nn.functional as F\n\noutput = F.relu(input)        # ReLU: max(0, x)`,
+          sigmoid: `output = torch.sigmoid(input) # Sigmoid: 1/(1+e^-x)`,
+          tanh: `output = torch.tanh(input)    # Tanh: (e^x - e^-x)/(e^x + e^-x)`,
+        };
+        codeEl.textContent = codeMap[currentFn] || codeMap.relu;
+      }
+      // Track progress: all 3 tabs visited
+      visited.add(currentFn);
+      if (visited.size >= 3 && window.__cnnProgress) {
+        window.__cnnProgress.save('section-activation');
+      }
     });
   });
 }
@@ -46,15 +72,23 @@ function drawGraph() {
   ctx.clearRect(0, 0, W, H);
 
   // Background
-  ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--bg-card').trim() || '#0f3460';
+  ctx.fillStyle =
+    getComputedStyle(document.documentElement)
+      .getPropertyValue('--bg-card')
+      .trim() || '#0f3460';
   ctx.fillRect(0, 0, W, H);
 
-  const xMin = -5, xMax = 5;
+  const xMin = -5,
+    xMax = 5;
   const yMin = currentFn === 'relu' ? -1 : -1.5;
   const yMax = currentFn === 'relu' ? 5 : 1.5;
 
-  function toCanvasX(x) { return ((x - xMin) / (xMax - xMin)) * W; }
-  function toCanvasY(y) { return H - ((y - yMin) / (yMax - yMin)) * H; }
+  function toCanvasX(x) {
+    return ((x - xMin) / (xMax - xMin)) * W;
+  }
+  function toCanvasY(y) {
+    return H - ((y - yMin) / (yMax - yMin)) * H;
+  }
 
   // Grid lines
   ctx.strokeStyle = 'rgba(255,255,255,0.08)';
@@ -105,8 +139,10 @@ function drawGraph() {
     const x = xMin + (px / W) * (xMax - xMin);
     const y = fn.fn(x);
     const cy = toCanvasY(y);
-    if (first) { ctx.moveTo(px, cy); first = false; }
-    else ctx.lineTo(px, cy);
+    if (first) {
+      ctx.moveTo(px, cy);
+      first = false;
+    } else ctx.lineTo(px, cy);
   }
   ctx.stroke();
 
@@ -168,34 +204,56 @@ function drawGraphNoRecurse() {
   const fn = FUNCTIONS[currentFn];
 
   ctx.clearRect(0, 0, W, H);
-  ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--bg-card').trim() || '#0f3460';
+  ctx.fillStyle =
+    getComputedStyle(document.documentElement)
+      .getPropertyValue('--bg-card')
+      .trim() || '#0f3460';
   ctx.fillRect(0, 0, W, H);
 
-  const xMin = -5, xMax = 5;
+  const xMin = -5,
+    xMax = 5;
   const yMin = currentFn === 'relu' ? -1 : -1.5;
   const yMax = currentFn === 'relu' ? 5 : 1.5;
 
-  function toCanvasX(x) { return ((x - xMin) / (xMax - xMin)) * W; }
-  function toCanvasY(y) { return H - ((y - yMin) / (yMax - yMin)) * H; }
+  function toCanvasX(x) {
+    return ((x - xMin) / (xMax - xMin)) * W;
+  }
+  function toCanvasY(y) {
+    return H - ((y - yMin) / (yMax - yMin)) * H;
+  }
 
   ctx.strokeStyle = 'rgba(255,255,255,0.08)';
   ctx.lineWidth = 1;
   for (let x = Math.ceil(xMin); x <= xMax; x++) {
-    ctx.beginPath(); ctx.moveTo(toCanvasX(x), 0); ctx.lineTo(toCanvasX(x), H); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(toCanvasX(x), 0);
+    ctx.lineTo(toCanvasX(x), H);
+    ctx.stroke();
   }
   for (let y = Math.ceil(yMin); y <= yMax; y++) {
-    ctx.beginPath(); ctx.moveTo(0, toCanvasY(y)); ctx.lineTo(W, toCanvasY(y)); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(0, toCanvasY(y));
+    ctx.lineTo(W, toCanvasY(y));
+    ctx.stroke();
   }
 
   ctx.strokeStyle = 'rgba(255,255,255,0.3)';
   ctx.lineWidth = 1.5;
-  ctx.beginPath(); ctx.moveTo(0, toCanvasY(0)); ctx.lineTo(W, toCanvasY(0)); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(toCanvasX(0), 0); ctx.lineTo(toCanvasX(0), H); ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(0, toCanvasY(0));
+  ctx.lineTo(W, toCanvasY(0));
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(toCanvasX(0), 0);
+  ctx.lineTo(toCanvasX(0), H);
+  ctx.stroke();
 
   ctx.fillStyle = 'rgba(255,255,255,0.5)';
   ctx.font = '10px Courier New';
-  for (let x = Math.ceil(xMin); x <= xMax; x++) ctx.fillText(x, toCanvasX(x) + 2, toCanvasY(0) + 12);
-  for (let y = Math.ceil(yMin); y <= yMax; y++) if (y !== 0) ctx.fillText(y, toCanvasX(0) + 4, toCanvasY(y) - 2);
+  for (let x = Math.ceil(xMin); x <= xMax; x++)
+    ctx.fillText(x, toCanvasX(x) + 2, toCanvasY(0) + 12);
+  for (let y = Math.ceil(yMin); y <= yMax; y++)
+    if (y !== 0) ctx.fillText(y, toCanvasX(0) + 4, toCanvasY(y) - 2);
 
   ctx.strokeStyle = fn.color;
   ctx.lineWidth = 2.5;
@@ -205,7 +263,10 @@ function drawGraphNoRecurse() {
     const x = xMin + (px / W) * (xMax - xMin);
     const y = fn.fn(x);
     const cy = toCanvasY(y);
-    if (first) { ctx.moveTo(px, cy); first = false; } else ctx.lineTo(px, cy);
+    if (first) {
+      ctx.moveTo(px, cy);
+      first = false;
+    } else ctx.lineTo(px, cy);
   }
   ctx.stroke();
 
@@ -276,7 +337,8 @@ function drawGrids() {
 
   // Arrow between
   const arrow = document.createElement('div');
-  arrow.style.cssText = 'font-size:1.5rem;color:var(--text-secondary);align-self:center;margin-top:20px;';
+  arrow.style.cssText =
+    'font-size:1.5rem;color:var(--text-secondary);align-self:center;margin-top:20px;';
   arrow.textContent = '→';
 
   pair.appendChild(beforeBlock);

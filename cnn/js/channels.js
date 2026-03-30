@@ -12,16 +12,82 @@ export function initChannels() {
 
   // RGB 5x5 inputs
   const inputs = {
-    R: [[10,20,30,40,50],[15,25,35,45,55],[20,30,40,50,60],[25,35,45,55,65],[30,40,50,60,70]],
-    G: [[5,15,25,35,45],[10,20,30,40,50],[15,25,35,45,55],[20,30,40,50,60],[25,35,45,55,65]],
-    B: [[0,10,20,30,40],[5,15,25,35,45],[10,20,30,40,50],[15,25,35,45,55],[20,30,40,50,60]]
+    R: [
+      [10, 20, 30, 40, 50],
+      [15, 25, 35, 45, 55],
+      [20, 30, 40, 50, 60],
+      [25, 35, 45, 55, 65],
+      [30, 40, 50, 60, 70],
+    ],
+    G: [
+      [5, 15, 25, 35, 45],
+      [10, 20, 30, 40, 50],
+      [15, 25, 35, 45, 55],
+      [20, 30, 40, 50, 60],
+      [25, 35, 45, 55, 65],
+    ],
+    B: [
+      [0, 10, 20, 30, 40],
+      [5, 15, 25, 35, 45],
+      [10, 20, 30, 40, 50],
+      [15, 25, 35, 45, 55],
+      [20, 30, 40, 50, 60],
+    ],
   };
 
   // Kernels per output channel: [C_out][C_in][3][3]
   const allKernels = [
-    { R: [[1,0,-1],[1,0,-1],[1,0,-1]], G: [[0,1,0],[0,1,0],[0,1,0]], B: [[-1,0,1],[-1,0,1],[-1,0,1]] },
-    { R: [[1,1,1],[0,0,0],[-1,-1,-1]], G: [[0,0,0],[1,1,1],[0,0,0]], B: [[-1,-1,-1],[0,0,0],[1,1,1]] },
-    { R: [[0,-1,0],[-1,4,-1],[0,-1,0]], G: [[0,0,0],[0,1,0],[0,0,0]], B: [[0,1,0],[1,-4,1],[0,1,0]] }
+    {
+      R: [
+        [1, 0, -1],
+        [1, 0, -1],
+        [1, 0, -1],
+      ],
+      G: [
+        [0, 1, 0],
+        [0, 1, 0],
+        [0, 1, 0],
+      ],
+      B: [
+        [-1, 0, 1],
+        [-1, 0, 1],
+        [-1, 0, 1],
+      ],
+    },
+    {
+      R: [
+        [1, 1, 1],
+        [0, 0, 0],
+        [-1, -1, -1],
+      ],
+      G: [
+        [0, 0, 0],
+        [1, 1, 1],
+        [0, 0, 0],
+      ],
+      B: [
+        [-1, -1, -1],
+        [0, 0, 0],
+        [1, 1, 1],
+      ],
+    },
+    {
+      R: [
+        [0, -1, 0],
+        [-1, 4, -1],
+        [0, -1, 0],
+      ],
+      G: [
+        [0, 0, 0],
+        [0, 1, 0],
+        [0, 0, 0],
+      ],
+      B: [
+        [0, 1, 0],
+        [1, -4, 1],
+        [0, 1, 0],
+      ],
+    },
   ];
 
   function renderAll() {
@@ -43,10 +109,12 @@ export function initChannels() {
       const filterSection = document.createElement('div');
       filterSection.style.marginBottom = '24px';
       filterSection.style.paddingBottom = '16px';
-      if (f < cOut - 1) filterSection.style.borderBottom = '1px solid var(--border-color)';
+      if (f < cOut - 1)
+        filterSection.style.borderBottom = '1px solid var(--border-color)';
 
       const title = document.createElement('div');
-      title.style.cssText = 'font-size:0.9rem;font-weight:700;margin-bottom:12px;';
+      title.style.cssText =
+        'font-size:0.9rem;font-weight:700;margin-bottom:12px;';
       title.style.color = 'var(--kernel-color)';
       title.textContent = cOut > 1 ? `필터 ${f + 1}` : '필터';
       filterSection.appendChild(title);
@@ -76,7 +144,12 @@ export function initChannels() {
             const cell = document.createElement('div');
             cell.className = 'channel-cell';
             cell.textContent = fmt(v, 0);
-            cell.style.background = valueToColor(v, imin, imax, ch === 'R' ? 'red' : ch === 'G' ? 'green' : 'blue');
+            cell.style.background = valueToColor(
+              v,
+              imin,
+              imax,
+              ch === 'R' ? 'red' : ch === 'G' ? 'green' : 'blue',
+            );
             ig.appendChild(cell);
           }
         }
@@ -124,7 +197,12 @@ export function initChannels() {
             const cell = document.createElement('div');
             cell.className = 'channel-cell';
             cell.textContent = fmt(v, 0);
-            cell.style.background = valueToColor(v, rmin, rmax, ch === 'R' ? 'red' : ch === 'G' ? 'green' : 'blue');
+            cell.style.background = valueToColor(
+              v,
+              rmin,
+              rmax,
+              ch === 'R' ? 'red' : ch === 'G' ? 'green' : 'blue',
+            );
             rg.appendChild(cell);
           }
         }
@@ -155,16 +233,21 @@ export function initChannels() {
       sumRow.style.gap = '12px';
 
       const sumLabel = document.createElement('div');
-      sumLabel.style.cssText = 'font-size:0.85rem;color:var(--output-color);font-weight:500;';
+      sumLabel.style.cssText =
+        'font-size:0.85rem;color:var(--output-color);font-weight:500;';
       sumLabel.textContent = 'R + G + B 합산 → 출력:';
       sumRow.appendChild(sumLabel);
 
       const oH = channelResults[0].length;
       const oW = channelResults[0][0].length;
       const summed = Array.from({ length: oH }, (_, i) =>
-        Array.from({ length: oW }, (_, j) =>
-          Math.round(channelResults.reduce((s, ch) => s + ch[i][j], 0) * 100) / 100
-        )
+        Array.from(
+          { length: oW },
+          (_, j) =>
+            Math.round(
+              channelResults.reduce((s, ch) => s + ch[i][j], 0) * 100,
+            ) / 100,
+        ),
       );
 
       const sg = document.createElement('div');
@@ -193,6 +276,12 @@ export function initChannels() {
     cOut = parseInt(coutSlider.value);
     coutVal.textContent = cOut;
     renderAll();
+    // Sync PyTorch code snippet
+    const codeEl = document.getElementById('ch-code');
+    if (codeEl) {
+      codeEl.textContent = `conv = nn.Conv2d(\n    in_channels=3, out_channels=${cOut},\n    kernel_size=3, stride=1, padding=0\n)\n# 입력: [1, 3, 5, 5] → 출력: [1, ${cOut}, 3, 3]`;
+    }
+    if (window.__cnnProgress) window.__cnnProgress.save('section-channels');
   });
 
   renderAll();

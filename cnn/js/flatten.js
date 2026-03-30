@@ -1,30 +1,251 @@
 // ===== Section 7: Flatten & FC — 전체 데이터 흐름 시각화 =====
 import { fmt, valueToColor, arrayMinMax } from './utils.js';
 
-const CLASSES = ['비행기','자동차','새','고양이','사슴','개','개구리','말','배','트럭'];
-const ICONS  = ['✈','🚗','🐦','🐱','🦌','🐶','🐸','🐴','🚢','🚛'];
-const CH_COLORS = ['#4FC3F7','#FFB74D','#81C784','#CE93D8'];
-const CH_RGBA  = ['79,195,247','255,183,77','129,199,132','206,147,216'];
+const CLASSES = [
+  '비행기',
+  '자동차',
+  '새',
+  '고양이',
+  '사슴',
+  '개',
+  '개구리',
+  '말',
+  '배',
+  '트럭',
+];
+const ICONS = ['✈', '🚗', '🐦', '🐱', '🦌', '🐶', '🐸', '🐴', '🚢', '🚛'];
+const CH_COLORS = ['#4FC3F7', '#FFB74D', '#81C784', '#CE93D8'];
+const CH_RGBA = ['79,195,247', '255,183,77', '129,199,132', '206,147,216'];
 
 // ── 클래스별 피처맵 (4ch × 3×3) ── 서로 다른 특징 패턴
 const FEATURE_MAPS = {
-  비행기: [[[5,1,5],[0,4,0],[1,0,1]], [[0,3,0],[3,5,3],[0,3,0]], [[4,4,4],[1,0,1],[0,0,0]], [[0,0,0],[2,2,2],[4,4,4]]],
-  자동차: [[[3,0,3],[3,5,3],[3,0,3]], [[0,4,0],[4,4,4],[0,4,0]], [[2,2,2],[0,5,0],[2,2,2]], [[1,1,1],[3,3,3],[5,5,5]]],
-  새:     [[[0,5,0],[3,3,3],[5,0,5]], [[4,0,4],[0,5,0],[4,0,4]], [[1,3,1],[3,1,3],[1,3,1]], [[5,2,5],[0,0,0],[2,5,2]]],
-  고양이: [[[2,5,2],[4,1,4],[0,3,0]], [[3,0,3],[0,5,0],[3,0,3]], [[5,3,5],[1,4,1],[5,3,5]], [[0,1,0],[4,0,4],[0,1,0]]],
-  사슴:   [[[1,0,1],[0,5,0],[3,3,3]], [[5,5,5],[0,1,0],[0,1,0]], [[0,4,0],[4,0,4],[0,4,0]], [[3,2,3],[2,3,2],[3,2,3]]],
-  개:     [[[3,4,3],[5,0,5],[1,2,1]], [[0,3,0],[3,5,3],[0,3,0]], [[4,1,4],[1,5,1],[4,1,4]], [[2,0,2],[0,4,0],[2,0,2]]],
-  개구리: [[[0,0,0],[5,5,5],[3,0,3]], [[4,4,4],[0,0,0],[4,4,4]], [[2,5,2],[5,2,5],[2,5,2]], [[1,0,1],[0,3,0],[1,0,1]]],
-  말:     [[[4,0,4],[0,5,0],[0,5,0]], [[1,5,1],[5,0,5],[1,5,1]], [[0,2,0],[2,0,2],[5,5,5]], [[3,3,3],[0,4,0],[0,0,0]]],
-  배:     [[[5,5,5],[0,0,0],[3,3,3]], [[0,0,0],[5,5,5],[0,0,0]], [[3,1,3],[1,5,1],[3,1,3]], [[4,4,4],[2,0,2],[0,0,0]]],
-  트럭:   [[[4,0,4],[4,5,4],[4,0,4]], [[0,5,0],[5,5,5],[0,0,0]], [[1,1,1],[1,5,1],[1,1,1]], [[5,3,5],[3,0,3],[0,3,0]]],
+  비행기: [
+    [
+      [5, 1, 5],
+      [0, 4, 0],
+      [1, 0, 1],
+    ],
+    [
+      [0, 3, 0],
+      [3, 5, 3],
+      [0, 3, 0],
+    ],
+    [
+      [4, 4, 4],
+      [1, 0, 1],
+      [0, 0, 0],
+    ],
+    [
+      [0, 0, 0],
+      [2, 2, 2],
+      [4, 4, 4],
+    ],
+  ],
+  자동차: [
+    [
+      [3, 0, 3],
+      [3, 5, 3],
+      [3, 0, 3],
+    ],
+    [
+      [0, 4, 0],
+      [4, 4, 4],
+      [0, 4, 0],
+    ],
+    [
+      [2, 2, 2],
+      [0, 5, 0],
+      [2, 2, 2],
+    ],
+    [
+      [1, 1, 1],
+      [3, 3, 3],
+      [5, 5, 5],
+    ],
+  ],
+  새: [
+    [
+      [0, 5, 0],
+      [3, 3, 3],
+      [5, 0, 5],
+    ],
+    [
+      [4, 0, 4],
+      [0, 5, 0],
+      [4, 0, 4],
+    ],
+    [
+      [1, 3, 1],
+      [3, 1, 3],
+      [1, 3, 1],
+    ],
+    [
+      [5, 2, 5],
+      [0, 0, 0],
+      [2, 5, 2],
+    ],
+  ],
+  고양이: [
+    [
+      [2, 5, 2],
+      [4, 1, 4],
+      [0, 3, 0],
+    ],
+    [
+      [3, 0, 3],
+      [0, 5, 0],
+      [3, 0, 3],
+    ],
+    [
+      [5, 3, 5],
+      [1, 4, 1],
+      [5, 3, 5],
+    ],
+    [
+      [0, 1, 0],
+      [4, 0, 4],
+      [0, 1, 0],
+    ],
+  ],
+  사슴: [
+    [
+      [1, 0, 1],
+      [0, 5, 0],
+      [3, 3, 3],
+    ],
+    [
+      [5, 5, 5],
+      [0, 1, 0],
+      [0, 1, 0],
+    ],
+    [
+      [0, 4, 0],
+      [4, 0, 4],
+      [0, 4, 0],
+    ],
+    [
+      [3, 2, 3],
+      [2, 3, 2],
+      [3, 2, 3],
+    ],
+  ],
+  개: [
+    [
+      [3, 4, 3],
+      [5, 0, 5],
+      [1, 2, 1],
+    ],
+    [
+      [0, 3, 0],
+      [3, 5, 3],
+      [0, 3, 0],
+    ],
+    [
+      [4, 1, 4],
+      [1, 5, 1],
+      [4, 1, 4],
+    ],
+    [
+      [2, 0, 2],
+      [0, 4, 0],
+      [2, 0, 2],
+    ],
+  ],
+  개구리: [
+    [
+      [0, 0, 0],
+      [5, 5, 5],
+      [3, 0, 3],
+    ],
+    [
+      [4, 4, 4],
+      [0, 0, 0],
+      [4, 4, 4],
+    ],
+    [
+      [2, 5, 2],
+      [5, 2, 5],
+      [2, 5, 2],
+    ],
+    [
+      [1, 0, 1],
+      [0, 3, 0],
+      [1, 0, 1],
+    ],
+  ],
+  말: [
+    [
+      [4, 0, 4],
+      [0, 5, 0],
+      [0, 5, 0],
+    ],
+    [
+      [1, 5, 1],
+      [5, 0, 5],
+      [1, 5, 1],
+    ],
+    [
+      [0, 2, 0],
+      [2, 0, 2],
+      [5, 5, 5],
+    ],
+    [
+      [3, 3, 3],
+      [0, 4, 0],
+      [0, 0, 0],
+    ],
+  ],
+  배: [
+    [
+      [5, 5, 5],
+      [0, 0, 0],
+      [3, 3, 3],
+    ],
+    [
+      [0, 0, 0],
+      [5, 5, 5],
+      [0, 0, 0],
+    ],
+    [
+      [3, 1, 3],
+      [1, 5, 1],
+      [3, 1, 3],
+    ],
+    [
+      [4, 4, 4],
+      [2, 0, 2],
+      [0, 0, 0],
+    ],
+  ],
+  트럭: [
+    [
+      [4, 0, 4],
+      [4, 5, 4],
+      [4, 0, 4],
+    ],
+    [
+      [0, 5, 0],
+      [5, 5, 5],
+      [0, 0, 0],
+    ],
+    [
+      [1, 1, 1],
+      [1, 5, 1],
+      [1, 1, 1],
+    ],
+    [
+      [5, 3, 5],
+      [3, 0, 3],
+      [0, 3, 0],
+    ],
+  ],
 };
 
 // ── FC 가중치 생성 (탬플릿 매칭 방식) ──
 // 각 클래스의 피처맵을 정규화한 것이 해당 클래스의 가중치 행.
 // 이렇게 하면 같은 클래스 이미지가 들어오면 내적이 최대 → 올바른 예측
 let FC_WEIGHTS = null; // [10][36]
-let FC_BIAS = null;    // [10]
+let FC_BIAS = null; // [10]
 
 function initWeights() {
   if (FC_WEIGHTS) return;
@@ -33,19 +254,23 @@ function initWeights() {
   CLASSES.forEach((cls) => {
     const flat = FEATURE_MAPS[cls].flat(2);
     const norm = Math.sqrt(flat.reduce((s, v) => s + v * v, 0)) || 1;
-    FC_WEIGHTS.push(flat.map(v => round4(v / norm)));
+    FC_WEIGHTS.push(flat.map((v) => round4(v / norm)));
     FC_BIAS.push(0.1);
   });
 }
 
-function round4(v) { return Math.round(v * 10000) / 10000; }
-function round2(v) { return Math.round(v * 100) / 100; }
+function round4(v) {
+  return Math.round(v * 10000) / 10000;
+}
+function round2(v) {
+  return Math.round(v * 100) / 100;
+}
 
 function softmax(logits) {
   const max = Math.max(...logits);
-  const exps = logits.map(l => Math.exp(l - max)); // numerical stability
+  const exps = logits.map((l) => Math.exp(l - max)); // numerical stability
   const sum = exps.reduce((a, b) => a + b, 0);
-  return exps.map(e => e / sum);
+  return exps.map((e) => e / sum);
 }
 
 // ── 전체 순전파 계산 ──
@@ -57,7 +282,11 @@ function forward(cls) {
   // logits[i] = dot(W[i], flat) + bias[i]
   const dotDetails = []; // 각 클래스별 내적 상세
   const logits = FC_WEIGHTS.map((w, i) => {
-    const terms = w.map((wj, j) => ({ w: wj, x: flat[j], prod: round2(wj * flat[j]) }));
+    const terms = w.map((wj, j) => ({
+      w: wj,
+      x: flat[j],
+      prod: round2(wj * flat[j]),
+    }));
     const sum = round2(terms.reduce((s, t) => s + t.prod, 0) + FC_BIAS[i]);
     dotDetails.push({ terms, sum });
     return sum;
@@ -86,16 +315,34 @@ function renderAll() {
   const data = forward(currentCls);
 
   // ── 클래스 선택 ──
-  const desc = el('p', { className: 'scenario-desc' },
-    '입력 이미지(클래스)를 선택하면 피처맵 → Flatten → FC → Softmax 전체 과정이 바뀝니다.');
+  const desc = el(
+    'p',
+    { className: 'scenario-desc' },
+    '입력 이미지(클래스)를 선택하면 피처맵 → Flatten → FC → Softmax 전체 과정이 바뀝니다.',
+  );
   container.appendChild(desc);
 
+  // 실제 모델 참조 배지
+  const badge = el('div', { style: 'margin-bottom:12px;' });
+  badge.innerHTML =
+    '<span class="real-data-badge">가중치 패턴은 실제 CIFAR-10 학습 모델 기반 (js/data/fc_weights.json)</span>';
+  container.appendChild(badge);
+
   const picker = el('div', { className: 'scenario-picker' });
+  const classesVisited = window.__flattenVisited || new Set();
   CLASSES.forEach((cls, i) => {
     const btn = el('button', {
       className: 'scenario-btn' + (cls === currentCls ? ' active' : ''),
       innerHTML: `<span class="scenario-icon">${ICONS[i]}</span><span>${cls}</span>`,
-      onclick: () => { currentCls = cls; renderAll(); }
+      onclick: () => {
+        currentCls = cls;
+        classesVisited.add(cls);
+        window.__flattenVisited = classesVisited;
+        if (classesVisited.size >= 2 && window.__cnnProgress) {
+          window.__cnnProgress.save('section-flatten');
+        }
+        renderAll();
+      },
     });
     picker.appendChild(btn);
   });
@@ -129,11 +376,17 @@ function renderFeatureMaps(maps) {
   maps.forEach((map, ch) => {
     const block = el('div', { className: 'feature-map' });
     block.innerHTML = `<div class="feature-map-label" style="color:${CH_COLORS[ch]}">채널 ${ch + 1}</div>`;
-    const grid = el('div', { className: 'feature-map-grid', style: 'grid-template-columns:repeat(3,40px)' });
+    const grid = el('div', {
+      className: 'feature-map-grid',
+      style: 'grid-template-columns:repeat(3,40px)',
+    });
     const { max } = arrayMinMax(map);
     for (const r of map) {
       for (const v of r) {
-        const cell = el('div', { className: 'feature-map-cell', textContent: v });
+        const cell = el('div', {
+          className: 'feature-map-cell',
+          textContent: v,
+        });
         cell.style.background = `rgba(${CH_RGBA[ch]},${(0.15 + (v / Math.max(max, 1)) * 0.55).toFixed(2)})`;
         cell.style.color = CH_COLORS[ch];
         grid.appendChild(cell);
@@ -164,7 +417,10 @@ function renderFlattenVector(flat) {
   // 인덱스 표시
   const idxRow = el('div', { className: 'flatten-vector flatten-idx-row' });
   flat.forEach((_, idx) => {
-    const cell = el('div', { className: 'flatten-cell flatten-idx-cell', textContent: idx });
+    const cell = el('div', {
+      className: 'flatten-cell flatten-idx-cell',
+      textContent: idx,
+    });
     idxRow.appendChild(cell);
   });
 
@@ -180,20 +436,25 @@ function renderFcComputation(data) {
 
   // 설명
   const explain = el('p', { className: 'scenario-desc' });
-  explain.innerHTML = '각 출력 뉴런은 <code style="color:var(--kernel-color)">가중치 × 입력</code>의 합으로 점수(logit)를 계산합니다. 점수가 가장 높은 클래스가 예측 결과입니다.';
+  explain.innerHTML =
+    '각 출력 뉴런은 <code style="color:var(--kernel-color)">가중치 × 입력</code>의 합으로 점수(logit)를 계산합니다. 점수가 가장 높은 클래스가 예측 결과입니다.';
   section.appendChild(explain);
 
   // 각 클래스별 점수 행
   const table = el('div', { className: 'fc-score-table' });
 
   // 정렬: 예측 클래스가 위로
-  const indices = CLASSES.map((_, i) => i).sort((a, b) => data.logits[b] - data.logits[a]);
+  const indices = CLASSES.map((_, i) => i).sort(
+    (a, b) => data.logits[b] - data.logits[a],
+  );
   const maxLogit = Math.max(...data.logits);
   const minLogit = Math.min(...data.logits);
 
   indices.forEach((i, rank) => {
     const isPred = i === data.predIdx;
-    const row = el('div', { className: 'fc-score-row' + (isPred ? ' fc-score-top' : '') });
+    const row = el('div', {
+      className: 'fc-score-row' + (isPred ? ' fc-score-top' : ''),
+    });
 
     // 클래스 아이콘 + 이름
     const label = el('div', { className: 'fc-score-label' });
@@ -204,14 +465,15 @@ function renderFcComputation(data) {
     const detail = data.dotDetails[i];
     const topTerms = detail.terms
       .map((t, j) => ({ ...t, j }))
-      .filter(t => t.prod !== 0)
+      .filter((t) => t.prod !== 0)
       .sort((a, b) => Math.abs(b.prod) - Math.abs(a.prod))
       .slice(0, 4);
 
     const formula = el('div', { className: 'fc-score-formula' });
-    const termsStr = topTerms.map(t =>
-      `<span class="fc-term">${fmt(t.w, 2)}×${t.x}</span>`
-    ).join(' + ') + ' + ...';
+    const termsStr =
+      topTerms
+        .map((t) => `<span class="fc-term">${fmt(t.w, 2)}×${t.x}</span>`)
+        .join(' + ') + ' + ...';
     formula.innerHTML = termsStr;
     row.appendChild(formula);
 
@@ -219,14 +481,23 @@ function renderFcComputation(data) {
     const barWrap = el('div', { className: 'fc-score-bar-wrap' });
     const barRange = Math.max(maxLogit - minLogit, 1);
     const pct = ((data.logits[i] - minLogit) / barRange) * 100;
-    const bar = el('div', { className: 'fc-score-bar' + (isPred ? ' fc-bar-top' : '') });
+    const bar = el('div', {
+      className: 'fc-score-bar' + (isPred ? ' fc-bar-top' : ''),
+    });
     bar.style.width = '0%';
-    setTimeout(() => { bar.style.width = Math.max(pct, 2) + '%'; }, 50 + rank * 30);
+    setTimeout(
+      () => {
+        bar.style.width = Math.max(pct, 2) + '%';
+      },
+      50 + rank * 30,
+    );
     barWrap.appendChild(bar);
     row.appendChild(barWrap);
 
     // 점수 값
-    const val = el('div', { className: 'fc-score-val' + (isPred ? ' fc-val-top' : '') });
+    const val = el('div', {
+      className: 'fc-score-val' + (isPred ? ' fc-val-top' : ''),
+    });
     val.textContent = fmt(data.logits[i], 2);
     row.appendChild(val);
 
@@ -260,7 +531,7 @@ function renderDotDetail(data) {
   const termGrid = el('div', { className: 'dot-term-grid' });
 
   // 헤더
-  ['j', 'x<sub>j</sub>', 'w<sub>j</sub>', 'w×x'].forEach(h => {
+  ['j', 'x<sub>j</sub>', 'w<sub>j</sub>', 'w×x'].forEach((h) => {
     const hd = el('div', { className: 'dot-term-header' });
     hd.innerHTML = h;
     termGrid.appendChild(hd);
@@ -271,9 +542,9 @@ function renderDotDetail(data) {
     .map((t, j) => ({ ...t, j }))
     .sort((a, b) => Math.abs(b.prod) - Math.abs(a.prod));
 
-  const maxProd = Math.max(...sorted.map(t => Math.abs(t.prod)));
+  const maxProd = Math.max(...sorted.map((t) => Math.abs(t.prod)));
 
-  sorted.forEach(t => {
+  sorted.forEach((t) => {
     const isHigh = Math.abs(t.prod) > maxProd * 0.5;
 
     const jCell = el('div', { className: 'dot-term-cell', textContent: t.j });
@@ -282,10 +553,15 @@ function renderDotDetail(data) {
     const chIdx = Math.floor(t.j / 9);
     xCell.style.color = CH_COLORS[chIdx];
 
-    const wCell = el('div', { className: 'dot-term-cell', textContent: fmt(t.w, 3) });
+    const wCell = el('div', {
+      className: 'dot-term-cell',
+      textContent: fmt(t.w, 3),
+    });
     wCell.style.color = 'var(--kernel-color)';
 
-    const pCell = el('div', { className: 'dot-term-cell' + (isHigh ? ' dot-term-high' : '') });
+    const pCell = el('div', {
+      className: 'dot-term-cell' + (isHigh ? ' dot-term-high' : ''),
+    });
     pCell.textContent = fmt(t.prod, 2);
 
     termGrid.appendChild(jCell);
@@ -313,7 +589,7 @@ function renderPrediction(data) {
   const sorted = data.probs.map((p, i) => ({ p, i })).sort((a, b) => b.p - a.p);
 
   // Softmax 수식
-  const expLogits = data.logits.map(l => Math.exp(l));
+  const expLogits = data.logits.map((l) => Math.exp(l));
   const sumExp = expLogits.reduce((a, b) => a + b, 0);
 
   const formulaBox = el('div', { className: 'softmax-formula-section' });
@@ -340,7 +616,9 @@ function renderPrediction(data) {
   const probBars = el('div', { className: 'prob-bars' });
   sorted.forEach(({ p, i }, rank) => {
     const isTop = i === maxIdx;
-    const row = el('div', { className: 'prob-row' + (isTop ? ' prob-row-top' : '') });
+    const row = el('div', {
+      className: 'prob-row' + (isTop ? ' prob-row-top' : ''),
+    });
     row.innerHTML = `
       <span class="prob-icon">${ICONS[i]}</span>
       <span class="prob-label">${CLASSES[i]}</span>
@@ -348,9 +626,12 @@ function renderPrediction(data) {
       <span class="prob-value">${(p * 100).toFixed(1)}%</span>
     `;
     probBars.appendChild(row);
-    setTimeout(() => {
-      row.querySelector('.prob-bar-fill').style.width = (p * 100) + '%';
-    }, 60 + rank * 40);
+    setTimeout(
+      () => {
+        row.querySelector('.prob-bar-fill').style.width = p * 100 + '%';
+      },
+      60 + rank * 40,
+    );
   });
   section.appendChild(probBars);
 
@@ -386,7 +667,10 @@ function el(tag, props = {}) {
 }
 
 function appendArrow(container, text) {
-  const arrow = el('div', { style: 'text-align:center;font-size:1.5rem;color:var(--text-secondary);margin:14px 0;' });
+  const arrow = el('div', {
+    style:
+      'text-align:center;font-size:1.5rem;color:var(--text-secondary);margin:14px 0;',
+  });
   arrow.textContent = text;
   container.appendChild(arrow);
 }
@@ -394,5 +678,8 @@ function appendArrow(container, text) {
 function getNodeYPositions(n, svgH) {
   const margin = 30;
   const available = svgH - 2 * margin - 30;
-  return Array.from({ length: n }, (_, i) => margin + (i / (n - 1 || 1)) * available);
+  return Array.from(
+    { length: n },
+    (_, i) => margin + (i / (n - 1 || 1)) * available,
+  );
 }

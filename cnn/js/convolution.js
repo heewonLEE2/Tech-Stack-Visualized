@@ -1,29 +1,119 @@
 // ===== Section 2: 합성곱 연산 애니메이션 =====
-import { convolve2D, padArray2D, outputSize, renderGrid, fmt, valueToColor, arrayMinMax } from './utils.js';
+import {
+  convolve2D,
+  padArray2D,
+  outputSize,
+  renderGrid,
+  fmt,
+  valueToColor,
+  arrayMinMax,
+} from './utils.js';
 
 // Preset kernels
 const PRESETS = {
   edge: {
-    3: [[-1,-1,-1],[-1,8,-1],[-1,-1,-1]],
-    5: [[-1,-1,-1,-1,-1],[-1,-1,-1,-1,-1],[-1,-1,24,-1,-1],[-1,-1,-1,-1,-1],[-1,-1,-1,-1,-1]],
-    1: [[1]]
+    3: [
+      [-1, -1, -1],
+      [-1, 8, -1],
+      [-1, -1, -1],
+    ],
+    5: [
+      [-1, -1, -1, -1, -1],
+      [-1, -1, -1, -1, -1],
+      [-1, -1, 24, -1, -1],
+      [-1, -1, -1, -1, -1],
+      [-1, -1, -1, -1, -1],
+    ],
+    1: [[1]],
   },
   blur: {
-    3: [[1,1,1],[1,1,1],[1,1,1]].map(r => r.map(v => +(v/9).toFixed(2))),
-    5: Array(5).fill(null).map(() => Array(5).fill(0.04)),
-    1: [[1]]
+    3: [
+      [1, 1, 1],
+      [1, 1, 1],
+      [1, 1, 1],
+    ].map((r) => r.map((v) => +(v / 9).toFixed(2))),
+    5: Array(5)
+      .fill(null)
+      .map(() => Array(5).fill(0.04)),
+    1: [[1]],
   },
   sharpen: {
-    3: [[0,-1,0],[-1,5,-1],[0,-1,0]],
-    5: [[0,0,-1,0,0],[0,-1,-2,-1,0],[-1,-2,17,-2,-1],[0,-1,-2,-1,0],[0,0,-1,0,0]],
-    1: [[1]]
+    3: [
+      [0, -1, 0],
+      [-1, 5, -1],
+      [0, -1, 0],
+    ],
+    5: [
+      [0, 0, -1, 0, 0],
+      [0, -1, -2, -1, 0],
+      [-1, -2, 17, -2, -1],
+      [0, -1, -2, -1, 0],
+      [0, 0, -1, 0, 0],
+    ],
+    1: [[1]],
   },
   identity: {
-    3: [[0,0,0],[0,1,0],[0,0,0]],
-    5: [[0,0,0,0,0],[0,0,0,0,0],[0,0,1,0,0],[0,0,0,0,0],[0,0,0,0,0]],
-    1: [[1]]
-  }
+    3: [
+      [0, 0, 0],
+      [0, 1, 0],
+      [0, 0, 0],
+    ],
+    5: [
+      [0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0],
+      [0, 0, 1, 0, 0],
+      [0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0],
+    ],
+    1: [[1]],
+  },
 };
+
+// 실제 학습된 커널 데이터 (JSON에서 로드)
+let trainedKernelData = null;
+let trainedKernelIndex = 0;
+
+async function loadTrainedKernels() {
+  if (trainedKernelData) return trainedKernelData;
+  try {
+    const res = await fetch('./js/data/kernels.json');
+    trainedKernelData = await res.json();
+    return trainedKernelData;
+  } catch (e) {
+    console.warn('학습된 커널 데이터 로드 실패:', e);
+    return null;
+  }
+}
+
+function populateTrainedSelector(data) {
+  const select = document.getElementById('trained-kernel-select');
+  if (!select || select.options.length > 0) return;
+  const key = state.kernelSize === 5 ? 'trained_5x5' : 'trained_3x3';
+  const list = data[key] || [];
+  select.innerHTML = '';
+  list.forEach((k, i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = k.name;
+    select.appendChild(opt);
+  });
+  select.addEventListener('change', () => {
+    trainedKernelIndex = parseInt(select.value);
+    applyTrainedKernel();
+  });
+}
+
+function applyTrainedKernel() {
+  if (!trainedKernelData) return;
+  const key = state.kernelSize === 5 ? 'trained_5x5' : 'trained_3x3';
+  const list = trainedKernelData[key] || [];
+  const entry = list[trainedKernelIndex];
+  if (!entry) return;
+  state.kernel = entry.weights.map((r) => [...r]);
+  resetAnim();
+  recompute();
+  render();
+}
 
 let state = {
   input: [
@@ -33,9 +123,13 @@ let state = {
     [1, 3, 0, 1, 0, 2, 1],
     [0, 2, 1, 3, 1, 0, 2],
     [1, 0, 2, 0, 2, 1, 0],
-    [2, 1, 0, 1, 0, 3, 1]
+    [2, 1, 0, 1, 0, 3, 1],
   ],
-  kernel: [[0,-1,0],[-1,5,-1],[0,-1,0]],
+  kernel: [
+    [0, -1, 0],
+    [-1, 5, -1],
+    [0, -1, 0],
+  ],
   kernelSize: 3,
   stride: 1,
   padding: 0,
@@ -44,7 +138,7 @@ let state = {
   isPlaying: false,
   animTimer: null,
   result: null,
-  activePreset: 'sharpen'
+  activePreset: 'sharpen',
 };
 
 export function initConvolution() {
@@ -52,6 +146,7 @@ export function initConvolution() {
   if (!container) return;
 
   setupControls();
+  setupCompareMode();
   recompute();
   render();
 }
@@ -104,15 +199,45 @@ function setupControls() {
   document.getElementById('conv-pause').addEventListener('click', pause);
   document.getElementById('conv-prev-step').addEventListener('click', prevStep);
   document.getElementById('conv-next-step').addEventListener('click', nextStep);
-  document.getElementById('conv-reset').addEventListener('click', () => { resetAnim(); render(); });
+  document.getElementById('conv-reset').addEventListener('click', () => {
+    resetAnim();
+    render();
+  });
 
   // Presets
-  document.querySelectorAll('.preset-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
+  document.querySelectorAll('.preset-btn').forEach((btn) => {
+    btn.addEventListener('click', async () => {
       state.activePreset = btn.dataset.preset;
-      updateKernelFromPreset();
-      document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+      document
+        .querySelectorAll('.preset-btn')
+        .forEach((b) => b.classList.remove('active'));
       btn.classList.add('active');
+
+      const picker = document.getElementById('trained-kernel-picker');
+      if (state.activePreset === 'trained') {
+        const data = await loadTrainedKernels();
+        if (data) {
+          if (state.kernelSize === 1) {
+            // 학습 커널은 1x1 없음 → 3x3으로 변경
+            state.kernelSize = 3;
+            const ks = document.getElementById('conv-kernel-slider');
+            if (ks) {
+              ks.value = 3;
+            }
+            const kv = document.getElementById('conv-kernel-val');
+            if (kv) {
+              kv.textContent = '3x3';
+            }
+          }
+          populateTrainedSelector(data);
+          picker.style.display = 'flex';
+          trainedKernelIndex = 0;
+          applyTrainedKernel();
+          return;
+        }
+      }
+      picker.style.display = 'none';
+      updateKernelFromPreset();
       resetAnim();
       recompute();
       render();
@@ -120,32 +245,64 @@ function setupControls() {
   });
 
   // Set initial active preset
-  document.querySelector(`.preset-btn[data-preset="${state.activePreset}"]`)?.classList.add('active');
+  document
+    .querySelector(`.preset-btn[data-preset="${state.activePreset}"]`)
+    ?.classList.add('active');
 }
 
 function updateKernelFromPreset() {
+  if (state.activePreset === 'trained') {
+    // 학습 커널은 별도 로직
+    if (trainedKernelData) {
+      const select = document.getElementById('trained-kernel-select');
+      if (select) {
+        select.innerHTML = '';
+      }
+      populateTrainedSelector(trainedKernelData);
+      trainedKernelIndex = 0;
+      applyTrainedKernel();
+    }
+    return;
+  }
   const preset = PRESETS[state.activePreset];
   if (preset && preset[state.kernelSize]) {
-    state.kernel = preset[state.kernelSize].map(r => [...r]);
+    state.kernel = preset[state.kernelSize].map((r) => [...r]);
   } else {
     // generate identity
     const k = state.kernelSize;
     state.kernel = Array.from({ length: k }, (_, i) =>
-      Array.from({ length: k }, (_, j) => (i === Math.floor(k/2) && j === Math.floor(k/2)) ? 1 : 0)
+      Array.from({ length: k }, (_, j) =>
+        i === Math.floor(k / 2) && j === Math.floor(k / 2) ? 1 : 0,
+      ),
     );
   }
 }
 
 function recompute() {
-  const outW = outputSize(state.input[0].length, state.kernelSize, state.padding, state.stride);
-  const outH = outputSize(state.input.length, state.kernelSize, state.padding, state.stride);
+  const outW = outputSize(
+    state.input[0].length,
+    state.kernelSize,
+    state.padding,
+    state.stride,
+  );
+  const outH = outputSize(
+    state.input.length,
+    state.kernelSize,
+    state.padding,
+    state.stride,
+  );
 
   if (outW < 1 || outH < 1) {
     state.result = null;
     return;
   }
 
-  state.result = convolve2D(state.input, state.kernel, state.stride, state.padding);
+  state.result = convolve2D(
+    state.input,
+    state.kernel,
+    state.stride,
+    state.padding,
+  );
   updateInfo();
 }
 
@@ -161,14 +318,23 @@ function updateInfo() {
   const oH = outputSize(H, K, P, S);
   const totalSteps = state.result ? state.result.steps.length : 0;
 
-  info.innerHTML = `입력: ${H}x${W} | 커널: ${K}x${K} | Stride: ${S} | Padding: ${P} → 출력: ${oH}x${oW} (${totalSteps}단계)` +
-    ` | O = (${W} - ${K} + 2*${P}) / ${S} + 1 = ${oW}`;
+  info.innerHTML =
+    `입력: ${H}x${W} | 커널: ${K}x${K} | Stride: ${S} | Padding: ${P} → 출력: ${oH}x${oW} (${totalSteps}단계)` +
+    ` | O = (${W} - ${K} + 2×${P}) / ${S} + 1 = ${oW}`;
+
+  // Sync PyTorch code snippet
+  const codeEl = document.getElementById('conv-code');
+  if (codeEl) {
+    codeEl.textContent = `import torch.nn as nn\n\nconv = nn.Conv2d(\n    in_channels=1, out_channels=6,\n    kernel_size=${K}, stride=${S}, padding=${P}\n)\n# 입력: [1, 1, ${H}, ${W}] → 출력: [1, 6, ${oH}, ${oW}]`;
+  }
 }
 
 function render() {
   const container = document.getElementById('convolution-container');
   if (!container || !state.result) {
-    if (container) container.innerHTML = '<p style="color:var(--text-secondary);text-align:center;padding:20px;">유효하지 않은 파라미터입니다. 커널 크기, 스트라이드, 패딩을 조정해 주세요.</p>';
+    if (container)
+      container.innerHTML =
+        '<p style="color:var(--text-secondary);text-align:center;padding:20px;">유효하지 않은 파라미터입니다. 커널 크기, 스트라이드, 패딩을 조정해 주세요.</p>';
     return;
   }
 
@@ -177,7 +343,8 @@ function render() {
   // Input panel
   const inputPanel = document.createElement('div');
   inputPanel.className = 'conv-panel';
-  inputPanel.innerHTML = '<div class="conv-panel-title" style="color:var(--input-color)">입력 (패딩 포함)</div>';
+  inputPanel.innerHTML =
+    '<div class="conv-panel-title" style="color:var(--input-color)">입력 (패딩 포함)</div>';
 
   const inputWrapper = document.createElement('div');
   inputWrapper.className = 'conv-grid-wrapper';
@@ -194,18 +361,24 @@ function render() {
     editable: true,
     idPrefix: 'ci',
     colorFn: (v, i, j) => {
-      const isPad = i < P || j < P || i >= padded.length - P || j >= padded[0].length - P;
+      const isPad =
+        i < P || j < P || i >= padded.length - P || j >= padded[0].length - P;
       if (isPad) return 'rgba(79, 195, 247, 0.08)';
       return valueToColor(v, imin, imax, 'blue');
     },
     onEdit: (i, j, newVal) => {
-      if (i >= P && j >= P && i < padded.length - P && j < padded[0].length - P) {
+      if (
+        i >= P &&
+        j >= P &&
+        i < padded.length - P &&
+        j < padded[0].length - P
+      ) {
         state.input[i - P][j - P] = newVal;
         resetAnim();
         recompute();
         render();
       }
-    }
+    },
   });
 
   // Mark padding cells
@@ -214,7 +387,9 @@ function render() {
   for (let i = 0; i < paddedH; i++) {
     for (let j = 0; j < paddedW; j++) {
       if (i < P || j < P || i >= paddedH - P || j >= paddedW - P) {
-        const cell = inputGrid.querySelector(`[data-row="${i}"][data-col="${j}"]`);
+        const cell = inputGrid.querySelector(
+          `[data-row="${i}"][data-col="${j}"]`,
+        );
         if (cell) cell.classList.add('padding-cell');
       }
     }
@@ -224,8 +399,8 @@ function render() {
   const overlay = document.createElement('div');
   overlay.className = 'kernel-overlay';
   overlay.id = 'kernel-overlay';
-  overlay.style.width = (state.kernelSize * 54) + 'px';
-  overlay.style.height = (state.kernelSize * 54) + 'px';
+  overlay.style.width = state.kernelSize * 54 + 'px';
+  overlay.style.height = state.kernelSize * 54 + 'px';
   overlay.style.display = 'none';
 
   inputWrapper.appendChild(inputGrid);
@@ -253,7 +428,7 @@ function render() {
       resetAnim();
       recompute();
       render();
-    }
+    },
   });
   inputPanel.appendChild(kernelGrid);
 
@@ -263,13 +438,15 @@ function render() {
   const opPanel = document.createElement('div');
   opPanel.className = 'op-detail';
   opPanel.id = 'op-detail';
-  opPanel.innerHTML = '<h4>연산 상세</h4><p style="color:var(--text-secondary);font-size:0.8rem;">재생 또는 단계 이동으로<br>연산 과정을 확인하세요.</p>';
+  opPanel.innerHTML =
+    '<h4>연산 상세</h4><p style="color:var(--text-secondary);font-size:0.8rem;">재생 또는 단계 이동으로<br>연산 과정을 확인하세요.</p>';
   container.appendChild(opPanel);
 
   // Output panel
   const outputPanel = document.createElement('div');
   outputPanel.className = 'conv-panel';
-  outputPanel.innerHTML = '<div class="conv-panel-title" style="color:var(--output-color)">출력</div>';
+  outputPanel.innerHTML =
+    '<div class="conv-panel-title" style="color:var(--output-color)">출력</div>';
 
   const outputGrid = document.createElement('div');
   outputGrid.className = 'conv-grid';
@@ -277,7 +454,9 @@ function render() {
 
   const outRows = state.result.output.length;
   const outCols = state.result.output[0].length;
-  const emptyOutput = Array.from({ length: outRows }, () => Array(outCols).fill(''));
+  const emptyOutput = Array.from({ length: outRows }, () =>
+    Array(outCols).fill(''),
+  );
 
   outputGrid.style.gridTemplateColumns = `repeat(${outCols}, 52px)`;
   for (let i = 0; i < outRows; i++) {
@@ -303,7 +482,8 @@ function render() {
 }
 
 function showStep(stepIdx) {
-  if (!state.result || stepIdx < 0 || stepIdx >= state.result.steps.length) return;
+  if (!state.result || stepIdx < 0 || stepIdx >= state.result.steps.length)
+    return;
 
   const step = state.result.steps[stepIdx];
   const K = state.kernelSize;
@@ -314,15 +494,17 @@ function showStep(stepIdx) {
   if (overlay) {
     overlay.style.display = 'block';
     const firstPos = step.positions[0];
-    overlay.style.top = (firstPos.row * 54) + 'px';
-    overlay.style.left = (firstPos.col * 54) + 'px';
+    overlay.style.top = firstPos.row * 54 + 'px';
+    overlay.style.left = firstPos.col * 54 + 'px';
   }
 
   // Clear active highlights
-  document.querySelectorAll('#conv-input-grid .conv-cell.active').forEach(c => c.classList.remove('active'));
+  document
+    .querySelectorAll('#conv-input-grid .conv-cell.active')
+    .forEach((c) => c.classList.remove('active'));
 
   // Highlight active input cells
-  step.positions.forEach(p => {
+  step.positions.forEach((p) => {
     const cell = document.querySelector(`#ci-${p.row}-${p.col}`);
     if (cell) cell.classList.add('active');
   });
@@ -376,6 +558,8 @@ function play() {
     state.currentStep++;
     if (state.currentStep >= totalSteps) {
       pause();
+      if (window.__cnnProgress)
+        window.__cnnProgress.save('section-convolution');
       return;
     }
     showStep(state.currentStep);
@@ -417,4 +601,108 @@ function resetAnim() {
   state.currentStep = -1;
   const overlay = document.getElementById('kernel-overlay');
   if (overlay) overlay.style.display = 'none';
+}
+
+// ===== Before/After 비교 모드 =====
+let compareActive = false;
+
+function setupCompareMode() {
+  const btn = document.getElementById('conv-compare-btn');
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    compareActive = !compareActive;
+    btn.classList.toggle('active', compareActive);
+    const mainViz = document.getElementById('convolution-container');
+    const compareViz = document.getElementById('conv-compare-container');
+    if (compareActive) {
+      mainViz.style.display = 'none';
+      compareViz.style.display = 'grid';
+      renderCompare();
+    } else {
+      mainViz.style.display = '';
+      compareViz.style.display = 'none';
+    }
+  });
+}
+
+function renderCompare() {
+  const container = document.getElementById('conv-compare-container');
+  if (!container) return;
+  container.innerHTML = '';
+
+  const input = state.input;
+  const K = state.kernelSize;
+  const P = state.padding;
+  const kernel = state.kernel;
+
+  // Stride 1 vs Stride 2
+  const configs = [
+    {
+      label: `Stride = 1  →  출력 ${outputSize(input[0].length, K, P, 1)}×${outputSize(input.length, K, P, 1)}`,
+      stride: 1,
+    },
+    {
+      label: `Stride = 2  →  출력 ${outputSize(input[0].length, K, P, 2)}×${outputSize(input.length, K, P, 2)}`,
+      stride: 2,
+    },
+  ];
+
+  configs.forEach((cfg, idx) => {
+    const panel = document.createElement('div');
+    panel.className = `compare-panel compare-panel-${idx === 0 ? 'a' : 'b'}`;
+
+    const title = document.createElement('div');
+    title.className = 'compare-panel-title';
+    title.textContent = cfg.label;
+    panel.appendChild(title);
+
+    const oW = outputSize(input[0].length, K, P, cfg.stride);
+    const oH = outputSize(input.length, K, P, cfg.stride);
+
+    if (oW < 1 || oH < 1) {
+      panel.innerHTML +=
+        '<p style="color:var(--text-secondary);text-align:center;">유효하지 않은 파라미터</p>';
+      container.appendChild(panel);
+      return;
+    }
+
+    const result = convolve2D(input, kernel, cfg.stride, P);
+
+    // mini output grid
+    const wrapper = document.createElement('div');
+    wrapper.className = 'compare-grid-wrapper';
+    const grid = document.createElement('div');
+    grid.className = 'conv-grid';
+    grid.style.gridTemplateColumns = `repeat(${oW}, 44px)`;
+
+    const { min: omin, max: omax } = arrayMinMax(result.output);
+    for (let i = 0; i < oH; i++) {
+      for (let j = 0; j < oW; j++) {
+        const cell = document.createElement('div');
+        cell.className = 'conv-cell';
+        cell.style.width = '42px';
+        cell.style.height = '42px';
+        cell.style.fontSize = '0.7rem';
+        cell.textContent = fmt(result.output[i][j]);
+        cell.style.background = valueToColor(
+          result.output[i][j],
+          omin,
+          omax,
+          'green',
+        );
+        grid.appendChild(cell);
+      }
+    }
+    wrapper.appendChild(grid);
+    panel.appendChild(wrapper);
+
+    // size info
+    const info = document.createElement('div');
+    info.style.cssText =
+      'text-align:center;color:var(--text-secondary);font-size:0.8rem;margin-top:8px;';
+    info.textContent = `${oH}×${oW} = ${oH * oW} 값`;
+    panel.appendChild(info);
+
+    container.appendChild(panel);
+  });
 }

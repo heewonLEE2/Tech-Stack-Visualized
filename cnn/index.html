@@ -1,218 +1,594 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CNN 아키텍처 시각화</title>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/animations.css">
-</head>
-<body>
-  <!-- 사이드바 네비게이션 -->
-  <nav id="sidebar">
-    <div class="sidebar-header">
-      <h2>CNN</h2>
-      <p class="sidebar-subtitle">Convolutional Neural Network</p>
-    </div>
-    <ul class="nav-list">
-      <li><a href="#section-overview" class="nav-link active" data-section="section-overview">
-        <span class="nav-icon">◈</span> 전체 구조
-      </a></li>
-      <li><a href="#section-convolution" class="nav-link" data-section="section-convolution">
-        <span class="nav-icon">⊞</span> 합성곱 연산
-      </a></li>
-      <li><a href="#section-channels" class="nav-link" data-section="section-channels">
-        <span class="nav-icon">◧</span> 다채널 합성곱
-      </a></li>
-      <li><a href="#section-dimensions" class="nav-link" data-section="section-dimensions">
-        <span class="nav-icon">▤</span> 텐서 차원 변화
-      </a></li>
-      <li><a href="#section-pooling" class="nav-link" data-section="section-pooling">
-        <span class="nav-icon">▦</span> 풀링
-      </a></li>
-      <li><a href="#section-activation" class="nav-link" data-section="section-activation">
-        <span class="nav-icon">∿</span> 활성화 함수
-      </a></li>
-      <li><a href="#section-flatten" class="nav-link" data-section="section-flatten">
-        <span class="nav-icon">▶</span> Flatten & FC
-      </a></li>
-    </ul>
-    <div class="sidebar-footer">
-      <button id="theme-toggle" class="theme-btn" title="테마 전환">
-        <span class="theme-icon">☀</span>
-      </button>
-    </div>
-  </nav>
-
-  <!-- 모바일 메뉴 버튼 -->
-  <button id="mobile-menu-btn" class="mobile-menu-btn" aria-label="메뉴 열기">☰</button>
-
-  <!-- 메인 콘텐츠 -->
-  <main id="main-content">
-    <!-- 1. 전체 구조 -->
-    <section id="section-overview" class="section">
-      <div class="section-inner">
-        <h1 class="section-title">CNN 전체 구조</h1>
-        <p class="section-desc">Convolutional Neural Network의 전체 파이프라인입니다. 각 블록을 클릭하면 해당 섹션으로 이동합니다.</p>
-        <div id="overview-container" class="viz-container"></div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CNN 아키텍처 시각화</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"
+    />
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"
+    ></script>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/animations.css" />
+  </head>
+  <body>
+    <!-- 사이드바 네비게이션 -->
+    <nav id="sidebar">
+      <div class="sidebar-header">
+        <h2>CNN</h2>
+        <p class="sidebar-subtitle">Convolutional Neural Network</p>
       </div>
-    </section>
-
-    <!-- 2. 합성곱 연산 -->
-    <section id="section-convolution" class="section">
-      <div class="section-inner">
-        <h1 class="section-title">합성곱 연산 (Convolution)</h1>
-        <p class="section-desc">
-          <span class="formula">O = (W - K + 2P) / S + 1</span>
-        </p>
-        <div class="control-row">
-          <label>커널 크기:
-            <input type="range" id="conv-kernel-slider" min="1" max="5" step="2" value="3" class="slider">
-            <span id="conv-kernel-val">3x3</span>
-          </label>
-          <label>Stride:
-            <input type="range" id="conv-stride-slider" min="1" max="3" value="1" class="slider">
-            <span id="conv-stride-val">1</span>
-          </label>
-          <label>Padding:
-            <input type="range" id="conv-padding-slider" min="0" max="2" value="0" class="slider">
-            <span id="conv-padding-val">0</span>
-          </label>
-        </div>
-        <div class="control-row">
-          <label>속도:
-            <input type="range" id="conv-speed-slider" min="0.5" max="3" step="0.5" value="1" class="slider">
-            <span id="conv-speed-val">1x</span>
-          </label>
-          <button id="conv-play" class="btn btn-primary">▶ 재생</button>
-          <button id="conv-pause" class="btn" disabled>⏸ 일시정지</button>
-          <button id="conv-prev-step" class="btn">◀ 이전</button>
-          <button id="conv-next-step" class="btn">▶ 다음</button>
-          <button id="conv-reset" class="btn">↻ 초기화</button>
-        </div>
-        <div class="control-row">
-          <span class="control-label">프리셋 커널:</span>
-          <button class="btn preset-btn" data-preset="edge">엣지 검출</button>
-          <button class="btn preset-btn" data-preset="blur">블러</button>
-          <button class="btn preset-btn" data-preset="sharpen">샤프닝</button>
-          <button class="btn preset-btn" data-preset="identity">단위 커널</button>
-        </div>
-        <div id="conv-info" class="conv-info"></div>
-        <div id="convolution-container" class="viz-container conv-layout"></div>
+      <ul class="nav-list">
+        <li>
+          <a
+            href="#section-overview"
+            class="nav-link active"
+            data-section="section-overview"
+          >
+            <span class="nav-icon">◈</span> 전체 구조
+            <span class="nav-check" data-progress="section-overview"></span>
+          </a>
+        </li>
+        <li>
+          <a
+            href="#section-convolution"
+            class="nav-link"
+            data-section="section-convolution"
+          >
+            <span class="nav-icon">⊞</span> 합성곱 연산
+            <span class="nav-check" data-progress="section-convolution"></span>
+          </a>
+        </li>
+        <li>
+          <a
+            href="#section-channels"
+            class="nav-link"
+            data-section="section-channels"
+          >
+            <span class="nav-icon">◧</span> 다채널 합성곱
+            <span class="nav-check" data-progress="section-channels"></span>
+          </a>
+        </li>
+        <li>
+          <a
+            href="#section-dimensions"
+            class="nav-link"
+            data-section="section-dimensions"
+          >
+            <span class="nav-icon">▤</span> 텐서 차원 변화
+            <span class="nav-check" data-progress="section-dimensions"></span>
+          </a>
+        </li>
+        <li>
+          <a
+            href="#section-pooling"
+            class="nav-link"
+            data-section="section-pooling"
+          >
+            <span class="nav-icon">▦</span> 풀링
+            <span class="nav-check" data-progress="section-pooling"></span>
+          </a>
+        </li>
+        <li>
+          <a
+            href="#section-activation"
+            class="nav-link"
+            data-section="section-activation"
+          >
+            <span class="nav-icon">∿</span> 활성화 함수
+            <span class="nav-check" data-progress="section-activation"></span>
+          </a>
+        </li>
+        <li>
+          <a
+            href="#section-flatten"
+            class="nav-link"
+            data-section="section-flatten"
+          >
+            <span class="nav-icon">▶</span> Flatten & FC
+            <span class="nav-check" data-progress="section-flatten"></span>
+          </a>
+        </li>
+      </ul>
+      <div class="sidebar-footer">
+        <button id="theme-toggle" class="theme-btn" title="테마 전환">
+          <span class="theme-icon">☀</span>
+        </button>
       </div>
-    </section>
+    </nav>
 
-    <!-- 3. 다채널 합성곱 -->
-    <section id="section-channels" class="section">
-      <div class="section-inner">
-        <h1 class="section-title">다채널 합성곱</h1>
-        <p class="section-desc">RGB 3채널 입력에 여러 필터를 적용하여 다수의 출력 채널을 생성합니다.</p>
-        <div class="control-row">
-          <label>출력 채널 수 (C_out):
-            <input type="range" id="ch-cout-slider" min="1" max="3" value="1" class="slider">
-            <span id="ch-cout-val">1</span>
-          </label>
-        </div>
-        <div id="channels-container" class="viz-container"></div>
-      </div>
-    </section>
+    <!-- 모바일 메뉴 버튼 -->
+    <button id="mobile-menu-btn" class="mobile-menu-btn" aria-label="메뉴 열기">
+      ☰
+    </button>
 
-    <!-- 4. 텐서 차원 변화 -->
-    <section id="section-dimensions" class="section">
-      <div class="section-inner">
-        <h1 class="section-title">텐서 차원 변화 [B, C, H, W]</h1>
-        <p class="section-desc">각 레이어를 통과할 때 텐서 shape이 어떻게 변화하는지 추적합니다.</p>
-        <div class="control-row">
-          <label>입력 높이 (H):
-            <input type="range" id="dim-h-slider" min="16" max="32" step="4" value="28" class="slider">
-            <span id="dim-h-val">28</span>
-          </label>
-          <label>입력 너비 (W):
-            <input type="range" id="dim-w-slider" min="16" max="32" step="4" value="28" class="slider">
-            <span id="dim-w-val">28</span>
-          </label>
-        </div>
-        <div class="control-row">
-          <span class="control-label">프리셋:</span>
-          <button class="btn dim-preset-btn" data-preset="lenet">LeNet-5</button>
-          <button class="btn dim-preset-btn" data-preset="simple">Simple 3-layer</button>
-        </div>
-        <div id="dimensions-container" class="viz-container"></div>
-      </div>
-    </section>
-
-    <!-- 5. 풀링 -->
-    <section id="section-pooling" class="section">
-      <div class="section-inner">
-        <h1 class="section-title">풀링 (Pooling)</h1>
-        <p class="section-desc">공간 차원을 줄여 계산량을 감소시키고 주요 특징을 추출합니다.</p>
-        <div class="tab-bar" id="pool-tabs">
-          <button class="tab-btn active" data-pool="max">Max Pooling</button>
-          <button class="tab-btn" data-pool="avg">Average Pooling</button>
-        </div>
-        <div class="control-row">
-          <label>Pool 크기:
-            <input type="range" id="pool-size-slider" min="2" max="3" value="2" class="slider">
-            <span id="pool-size-val">2x2</span>
-          </label>
-          <label>Stride:
-            <input type="range" id="pool-stride-slider" min="1" max="2" value="2" class="slider">
-            <span id="pool-stride-val">2</span>
-          </label>
-          <label>속도:
-            <input type="range" id="pool-speed-slider" min="0.5" max="3" step="0.5" value="1" class="slider">
-            <span id="pool-speed-val">1x</span>
-          </label>
-        </div>
-        <div class="control-row">
-          <button id="pool-play" class="btn btn-primary">▶ 재생</button>
-          <button id="pool-pause" class="btn" disabled>⏸ 일시정지</button>
-          <button id="pool-reset" class="btn">↻ 초기화</button>
-        </div>
-        <div id="pooling-container" class="viz-container conv-layout"></div>
-      </div>
-    </section>
-
-    <!-- 6. 활성화 함수 -->
-    <section id="section-activation" class="section">
-      <div class="section-inner">
-        <h1 class="section-title">활성화 함수 (Activation)</h1>
-        <p class="section-desc">비선형 활성화 함수가 값을 어떻게 변환하는지 확인합니다.</p>
-        <div class="tab-bar" id="act-tabs">
-          <button class="tab-btn active" data-act="relu">ReLU</button>
-          <button class="tab-btn" data-act="sigmoid">Sigmoid</button>
-          <button class="tab-btn" data-act="tanh">Tanh</button>
-        </div>
-        <div id="activation-container" class="viz-container">
-          <div class="viz-row">
-            <div class="viz-half">
-              <h3>함수 그래프</h3>
-              <canvas id="act-canvas" width="400" height="300"></canvas>
-              <div id="act-probe" class="act-probe"></div>
+    <!-- 메인 콘텐츠 -->
+    <main id="main-content">
+      <!-- 1. 전체 구조 -->
+      <section id="section-overview" class="section">
+        <div class="section-inner">
+          <h1 class="section-title">CNN 전체 구조</h1>
+          <p class="section-desc">
+            <span data-term="cnn">Convolutional Neural Network</span>의 전체
+            파이프라인입니다. 각 블록을 클릭하면 해당 섹션으로 이동합니다.
+          </p>
+          <details class="why-panel">
+            <summary>💡 왜 CNN인가?</summary>
+            <div class="why-content">
+              <p>
+                <strong>완전연결(FC) 네트워크의 한계:</strong> 이미지를
+                1차원으로 펼치면 <em>공간 구조가 사라지고</em>, 파라미터 수가
+                폭발합니다 (28×28 이미지만 해도 784개 입력).
+              </p>
+              <p>
+                <strong>CNN의 해결:</strong>
+                <span data-term="kernel">커널</span>을 공유하여 파라미터를
+                극적으로 줄이고(3×3=9개), 지역 패턴(엣지, 텍스처)을 계층적으로
+                학습합니다.
+              </p>
             </div>
-            <div class="viz-half">
-              <h3>Before / After 그리드</h3>
-              <div id="act-grids"></div>
+          </details>
+          <div id="overview-container" class="viz-container"></div>
+        </div>
+      </section>
+
+      <!-- 2. 합성곱 연산 -->
+      <section id="section-convolution" class="section">
+        <div class="section-inner">
+          <h1 class="section-title">합성곱 연산 (Convolution)</h1>
+          <p class="section-desc">
+            <span id="conv-formula" class="katex-formula"></span>
+          </p>
+          <details class="why-panel">
+            <summary>💡 왜 합성곱인가?</summary>
+            <div class="why-content">
+              <p>
+                <strong>가중치 공유:</strong> 하나의
+                <span data-term="kernel">커널</span>이 입력 전체를
+                슬라이딩하므로, 같은 패턴을 위치에 관계없이 감지합니다.
+              </p>
+              <p>
+                <strong>지역 연결:</strong> 각 출력 뉴런이 입력의 일부 영역만
+                보므로, 엣지·코너 같은 <em>지역 특징</em>을 효율적으로
+                추출합니다.
+              </p>
+              <p>
+                <strong>계층적 학습:</strong> 얕은 층은 엣지, 깊은 층은 물체
+                부분 → 전체 객체를 단계적으로 인식합니다.
+              </p>
+            </div>
+          </details>
+          <div class="control-row">
+            <label
+              >커널 크기:
+              <input
+                type="range"
+                id="conv-kernel-slider"
+                min="1"
+                max="5"
+                step="2"
+                value="3"
+                class="slider"
+              />
+              <span id="conv-kernel-val">3x3</span>
+            </label>
+            <label
+              >Stride:
+              <input
+                type="range"
+                id="conv-stride-slider"
+                min="1"
+                max="3"
+                value="1"
+                class="slider"
+              />
+              <span id="conv-stride-val">1</span>
+            </label>
+            <label
+              >Padding:
+              <input
+                type="range"
+                id="conv-padding-slider"
+                min="0"
+                max="2"
+                value="0"
+                class="slider"
+              />
+              <span id="conv-padding-val">0</span>
+            </label>
+          </div>
+          <div class="control-row">
+            <label
+              >속도:
+              <input
+                type="range"
+                id="conv-speed-slider"
+                min="0.5"
+                max="3"
+                step="0.5"
+                value="1"
+                class="slider"
+              />
+              <span id="conv-speed-val">1x</span>
+            </label>
+            <button id="conv-play" class="btn btn-primary">▶ 재생</button>
+            <button id="conv-pause" class="btn" disabled>⏸ 일시정지</button>
+            <button id="conv-prev-step" class="btn">◀ 이전</button>
+            <button id="conv-next-step" class="btn">▶ 다음</button>
+            <button id="conv-reset" class="btn">↻ 초기화</button>
+          </div>
+          <div class="control-row">
+            <span class="control-label">프리셋 커널:</span>
+            <button class="btn preset-btn" data-preset="edge">엣지 검출</button>
+            <button class="btn preset-btn" data-preset="blur">블러</button>
+            <button class="btn preset-btn" data-preset="sharpen">샤프닝</button>
+            <button class="btn preset-btn" data-preset="identity">
+              단위 커널
+            </button>
+            <button
+              class="btn preset-btn preset-btn--real"
+              data-preset="trained"
+            >
+              🧠 실제 학습 커널
+            </button>
+          </div>
+          <div
+            id="trained-kernel-picker"
+            class="control-row"
+            style="display: none"
+          >
+            <span class="control-label">학습 커널 선택:</span>
+            <select id="trained-kernel-select" class="styled-select"></select>
+            <span class="real-data-badge">실제 학습된 모델의 값</span>
+          </div>
+          <div id="conv-info" class="conv-info"></div>
+          <div class="compare-toggle-row">
+            <button id="conv-compare-btn" class="btn btn-compare">
+              ⚖ 비교 모드: Stride 1 vs 2
+            </button>
+          </div>
+          <div
+            id="convolution-container"
+            class="viz-container conv-layout"
+          ></div>
+          <div
+            id="conv-compare-container"
+            class="compare-container"
+            style="display: none"
+          ></div>
+          <details class="code-panel">
+            <summary>🐍 PyTorch 코드</summary>
+            <pre class="code-block"><code id="conv-code">import torch.nn as nn
+
+conv = nn.Conv2d(
+    in_channels=1, out_channels=6,
+    kernel_size=3, stride=1, padding=0
+)
+# 입력: [1, 1, 7, 7] → 출력: [1, 6, 5, 5]</code></pre>
+          </details>
+        </div>
+      </section>
+
+      <!-- 3. 다채널 합성곱 -->
+      <section id="section-channels" class="section">
+        <div class="section-inner">
+          <h1 class="section-title">다채널 합성곱</h1>
+          <p class="section-desc">
+            RGB 3채널 입력에 여러 <span data-term="filter">필터</span>를
+            적용하여 다수의 출력 <span data-term="feature-map">채널</span>을
+            생성합니다.
+          </p>
+          <details class="why-panel">
+            <summary>💡 왜 다채널인가?</summary>
+            <div class="why-content">
+              <p>
+                <strong>다양한 특징 동시 추출:</strong> 채널마다 다른 패턴(수평
+                엣지, 수직 엣지, 텍스처 등)을 학습합니다.
+              </p>
+              <p>
+                <strong>정보 보존:</strong> 단일 필터로는 색상·밝기·질감 정보를
+                동시에 포착할 수 없으므로, 여러 필터가 <em>상호 보완적</em>으로
+                동작합니다.
+              </p>
+            </div>
+          </details>
+          <div class="control-row">
+            <label
+              >출력 채널 수 (C_out):
+              <input
+                type="range"
+                id="ch-cout-slider"
+                min="1"
+                max="3"
+                value="1"
+                class="slider"
+              />
+              <span id="ch-cout-val">1</span>
+            </label>
+          </div>
+          <div id="channels-container" class="viz-container"></div>
+          <details class="code-panel">
+            <summary>🐍 PyTorch 코드</summary>
+            <pre class="code-block"><code id="ch-code">conv = nn.Conv2d(
+    in_channels=3, out_channels=1,
+    kernel_size=3, stride=1, padding=0
+)
+# 입력: [1, 3, 5, 5] → 출력: [1, 1, 3, 3]</code></pre>
+          </details>
+        </div>
+      </section>
+
+      <!-- 4. 텐서 차원 변화 -->
+      <section id="section-dimensions" class="section">
+        <div class="section-inner">
+          <h1 class="section-title">
+            텐서 차원 변화
+            <span id="dim-shape-formula" class="katex-formula"></span>
+          </h1>
+          <p class="section-desc">
+            각 레이어를 통과할 때 <span data-term="tensor">텐서</span> shape이
+            어떻게 변화하는지 추적합니다.
+          </p>
+          <details class="why-panel">
+            <summary>💡 왜 차원 추적이 중요한가?</summary>
+            <div class="why-content">
+              <p>
+                <strong>Shape Mismatch 디버깅:</strong> 딥러닝에서 가장 흔한
+                에러가 텐서 크기 불일치입니다. 각 레이어의 입출력 shape을 미리
+                계산하면 이를 예방합니다.
+              </p>
+              <p>
+                <strong>메모리 계획:</strong> shape을 알면 GPU 메모리 사용량을
+                예측할 수 있어,
+                <span data-term="batch-size">배치 크기</span> 결정에 도움됩니다.
+              </p>
+            </div>
+          </details>
+          <div class="control-row">
+            <label
+              >입력 높이 (H):
+              <input
+                type="range"
+                id="dim-h-slider"
+                min="16"
+                max="32"
+                step="4"
+                value="28"
+                class="slider"
+              />
+              <span id="dim-h-val">28</span>
+            </label>
+            <label
+              >입력 너비 (W):
+              <input
+                type="range"
+                id="dim-w-slider"
+                min="16"
+                max="32"
+                step="4"
+                value="28"
+                class="slider"
+              />
+              <span id="dim-w-val">28</span>
+            </label>
+          </div>
+          <div class="control-row">
+            <span class="control-label">프리셋:</span>
+            <button class="btn dim-preset-btn" data-preset="lenet">
+              LeNet-5
+            </button>
+            <button class="btn dim-preset-btn" data-preset="simple">
+              Simple 3-layer
+            </button>
+          </div>
+          <div id="dimensions-container" class="viz-container"></div>
+        </div>
+      </section>
+
+      <!-- 5. 풀링 -->
+      <section id="section-pooling" class="section">
+        <div class="section-inner">
+          <h1 class="section-title">풀링 (Pooling)</h1>
+          <p class="section-desc">
+            공간 차원을 줄여 계산량을 감소시키고 주요 특징을 추출합니다.
+          </p>
+          <details class="why-panel">
+            <summary>💡 왜 풀링인가?</summary>
+            <div class="why-content">
+              <p>
+                <strong>계산량 감소:</strong>
+                <span data-term="feature-map">특성맵</span> 크기를 절반으로
+                줄이면 다음 레이어의 연산량이 <em>1/4</em>로 줄어듭니다.
+              </p>
+              <p>
+                <strong>평행이동 불변성:</strong> 물체가 이미지 내에서 약간
+                이동해도 풀링 결과가 유사하므로, 모델의 <em>위치 강건성</em>이
+                향상됩니다.
+              </p>
+              <p>
+                <strong>과적합 방지:</strong> 공간 해상도를 줄여 파라미터 수를
+                제한합니다.
+              </p>
+            </div>
+          </details>
+          <div class="tab-bar" id="pool-tabs">
+            <button class="tab-btn active" data-pool="max">Max Pooling</button>
+            <button class="tab-btn" data-pool="avg">Average Pooling</button>
+          </div>
+          <div class="control-row">
+            <label
+              >Pool 크기:
+              <input
+                type="range"
+                id="pool-size-slider"
+                min="2"
+                max="3"
+                value="2"
+                class="slider"
+              />
+              <span id="pool-size-val">2x2</span>
+            </label>
+            <label
+              >Stride:
+              <input
+                type="range"
+                id="pool-stride-slider"
+                min="1"
+                max="2"
+                value="2"
+                class="slider"
+              />
+              <span id="pool-stride-val">2</span>
+            </label>
+            <label
+              >속도:
+              <input
+                type="range"
+                id="pool-speed-slider"
+                min="0.5"
+                max="3"
+                step="0.5"
+                value="1"
+                class="slider"
+              />
+              <span id="pool-speed-val">1x</span>
+            </label>
+          </div>
+          <div class="control-row">
+            <button id="pool-play" class="btn btn-primary">▶ 재생</button>
+            <button id="pool-pause" class="btn" disabled>⏸ 일시정지</button>
+            <button id="pool-reset" class="btn">↻ 초기화</button>
+          </div>
+          <div class="compare-toggle-row">
+            <button id="pool-compare-btn" class="btn btn-compare">
+              ⚖ 비교 모드: Max vs Average
+            </button>
+          </div>
+          <div id="pooling-container" class="viz-container conv-layout"></div>
+          <div
+            id="pool-compare-container"
+            class="compare-container"
+            style="display: none"
+          ></div>
+          <details class="code-panel">
+            <summary>🐍 PyTorch 코드</summary>
+            <pre
+              class="code-block"
+            ><code id="pool-code">pool = nn.MaxPool2d(kernel_size=2, stride=2)
+# 입력: [1, 6, 26, 26] → 출력: [1, 6, 13, 13]</code></pre>
+          </details>
+        </div>
+      </section>
+
+      <!-- 6. 활성화 함수 -->
+      <section id="section-activation" class="section">
+        <div class="section-inner">
+          <h1 class="section-title">활성화 함수 (Activation)</h1>
+          <p class="section-desc">
+            비선형 <span data-term="activation">활성화 함수</span>가 값을 어떻게
+            변환하는지 확인합니다.
+          </p>
+          <details class="why-panel">
+            <summary>💡 왜 비선형 함수인가?</summary>
+            <div class="why-content">
+              <p>
+                <strong>선형의 한계:</strong> 선형 변환을 아무리 깊게 쌓아도
+                결국 하나의 선형 변환과 같습니다. <em>XOR 문제</em>조차 풀 수
+                없습니다.
+              </p>
+              <p>
+                <strong>범용 근사기:</strong> 비선형 활성화를 추가하면
+                이론적으로 모든 연속 함수를 근사할 수 있습니다 (Universal
+                Approximation Theorem).
+              </p>
+              <p>
+                <strong>ReLU의 장점:</strong> 양수에서 기울기가 1이므로
+                <span data-term="gradient">그래디언트 소실</span> 문제를
+                완화합니다.
+              </p>
+            </div>
+          </details>
+          <div class="tab-bar" id="act-tabs">
+            <button class="tab-btn active" data-act="relu">ReLU</button>
+            <button class="tab-btn" data-act="sigmoid">Sigmoid</button>
+            <button class="tab-btn" data-act="tanh">Tanh</button>
+          </div>
+          <div id="activation-container" class="viz-container">
+            <div class="viz-row">
+              <div class="viz-half">
+                <h3>함수 그래프</h3>
+                <canvas id="act-canvas" width="400" height="300"></canvas>
+                <div id="act-probe" class="act-probe"></div>
+              </div>
+              <div class="viz-half">
+                <h3>Before / After 그리드</h3>
+                <div id="act-grids"></div>
+              </div>
             </div>
           </div>
+          <details class="code-panel">
+            <summary>🐍 PyTorch 코드</summary>
+            <pre
+              class="code-block"
+            ><code id="act-code">import torch.nn.functional as F
+
+output = F.relu(input)        # ReLU: max(0, x)
+# output = torch.sigmoid(input) # Sigmoid: 1/(1+e^-x)
+# output = torch.tanh(input)    # Tanh</code></pre>
+          </details>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <!-- 7. Flatten & FC -->
-    <section id="section-flatten" class="section">
-      <div class="section-inner">
-        <h1 class="section-title">Flatten & Fully Connected</h1>
-        <p class="section-desc">피처맵을 1차원 벡터로 펼친 뒤 FC 레이어를 통해 분류합니다.</p>
-        <div id="flatten-container" class="viz-container"></div>
-      </div>
-    </section>
-  </main>
+      <!-- 7. Flatten & FC -->
+      <section id="section-flatten" class="section">
+        <div class="section-inner">
+          <h1 class="section-title">Flatten & Fully Connected</h1>
+          <p class="section-desc">
+            <span data-term="feature-map">피처맵</span>을 1차원 벡터로 펼친 뒤
+            <span data-term="fc">FC 레이어</span>를 통해 분류합니다.
+          </p>
+          <details class="why-panel">
+            <summary>💡 왜 Flatten & FC인가?</summary>
+            <div class="why-content">
+              <p>
+                <strong>공간 → 의미:</strong> 합성곱으로 추출한 공간 특징을
+                하나의 벡터로 합쳐, <em>클래스 확률</em>로 변환하는 다리
+                역할입니다.
+              </p>
+              <p>
+                <strong>비선형 결합:</strong> FC 레이어는 모든 특징을 전역적으로
+                조합하여, "이 조합이 고양이에 가깝다"는 판단을 내립니다.
+              </p>
+              <p>
+                <strong>Softmax:</strong> 최종 출력을 확률 분포로 변환하여, 가장
+                높은 확률의 클래스를 예측으로 선택합니다.
+              </p>
+            </div>
+          </details>
+          <div id="flatten-container" class="viz-container"></div>
+          <details class="code-panel">
+            <summary>🐍 PyTorch 코드</summary>
+            <pre
+              class="code-block"
+            ><code id="fc-code">flatten = nn.Flatten()          # [1, 4, 3, 3] → [1, 36]
+fc = nn.Linear(36, 10)          # 36차원 → 10 클래스
+output = torch.softmax(fc(flatten(x)), dim=1)</code></pre>
+          </details>
+        </div>
+      </section>
+    </main>
 
-  <!-- 툴팁 -->
-  <div id="tooltip" class="tooltip" style="display:none;"></div>
+    <!-- 툴팁 -->
+    <div id="tooltip" class="tooltip" style="display: none"></div>
 
-  <script type="module" src="js/main.js"></script>
-</body>
+    <script type="module" src="js/main.js"></script>
+  </body>
 </html>

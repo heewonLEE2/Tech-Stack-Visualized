@@ -8,7 +8,7 @@ let state = {
     [1, 5, 2, 9, 6, 3],
     [7, 0, 4, 3, 8, 1],
     [2, 8, 1, 6, 0, 5],
-    [3, 4, 9, 2, 7, 6]
+    [3, 4, 9, 2, 7, 6],
   ],
   poolType: 'max',
   poolSize: 2,
@@ -18,7 +18,7 @@ let state = {
   isPlaying: false,
   animTimer: null,
   steps: [],
-  output: []
+  output: [],
 };
 
 export function initPooling() {
@@ -26,15 +26,18 @@ export function initPooling() {
   if (!container) return;
 
   setupControls();
+  setupPoolCompare();
   recompute();
   render();
 }
 
 function setupControls() {
   // Pool tabs
-  document.querySelectorAll('#pool-tabs .tab-btn').forEach(btn => {
+  document.querySelectorAll('#pool-tabs .tab-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('#pool-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+      document
+        .querySelectorAll('#pool-tabs .tab-btn')
+        .forEach((b) => b.classList.remove('active'));
       btn.classList.add('active');
       state.poolType = btn.dataset.pool;
       resetAnim();
@@ -76,7 +79,10 @@ function setupControls() {
   // Play/Pause/Reset
   document.getElementById('pool-play').addEventListener('click', play);
   document.getElementById('pool-pause').addEventListener('click', pause);
-  document.getElementById('pool-reset').addEventListener('click', () => { resetAnim(); render(); });
+  document.getElementById('pool-reset').addEventListener('click', () => {
+    resetAnim();
+    render();
+  });
 }
 
 function recompute() {
@@ -86,6 +92,13 @@ function recompute() {
   const S = state.stride;
   const outH = outputSize(H, K, 0, S);
   const outW = outputSize(W, K, 0, S);
+
+  // Sync PyTorch code snippet
+  const codeEl = document.getElementById('pool-code');
+  if (codeEl) {
+    const cls = state.poolType === 'max' ? 'MaxPool2d' : 'AvgPool2d';
+    codeEl.textContent = `pool = nn.${cls}(kernel_size=${K}, stride=${S})\n# \uc785\ub825: [1, 6, ${H}, ${W}] \u2192 \ucd9c\ub825: [1, 6, ${outH > 0 ? outH : '?'}, ${outW > 0 ? outW : '?'}]`;
+  }
 
   if (outH < 1 || outW < 1) {
     state.steps = [];
@@ -115,14 +128,21 @@ function recompute() {
         result = Math.max(...values);
         selectedIdx = values.indexOf(result);
       } else {
-        result = Math.round((values.reduce((a, b) => a + b, 0) / values.length) * 100) / 100;
+        result =
+          Math.round(
+            (values.reduce((a, b) => a + b, 0) / values.length) * 100,
+          ) / 100;
         selectedIdx = -1;
       }
 
       state.output[i].push(result);
       state.steps.push({
-        outRow: i, outCol: j,
-        positions, values, result, selectedIdx
+        outRow: i,
+        outCol: j,
+        positions,
+        values,
+        result,
+        selectedIdx,
       });
     }
   }
@@ -134,7 +154,8 @@ function render() {
   container.innerHTML = '';
 
   if (state.steps.length === 0) {
-    container.innerHTML = '<p style="color:var(--text-secondary);text-align:center;padding:20px;">유효하지 않은 파라미터입니다.</p>';
+    container.innerHTML =
+      '<p style="color:var(--text-secondary);text-align:center;padding:20px;">유효하지 않은 파라미터입니다.</p>';
     return;
   }
 
@@ -152,7 +173,8 @@ function render() {
   // Input panel
   const inputPanel = document.createElement('div');
   inputPanel.className = 'conv-panel';
-  inputPanel.innerHTML = '<div class="conv-panel-title" style="color:var(--input-color)">입력</div>';
+  inputPanel.innerHTML =
+    '<div class="conv-panel-title" style="color:var(--input-color)">입력</div>';
 
   const inputWrapper = document.createElement('div');
   inputWrapper.className = 'conv-grid-wrapper';
@@ -169,7 +191,12 @@ function render() {
       cell.className = 'conv-cell';
       cell.id = `pi-${i}-${j}`;
       cell.textContent = fmt(state.input[i][j], 0);
-      cell.style.background = valueToColor(state.input[i][j], imin, imax, 'blue');
+      cell.style.background = valueToColor(
+        state.input[i][j],
+        imin,
+        imax,
+        'blue',
+      );
       inputGrid.appendChild(cell);
     }
   }
@@ -178,8 +205,8 @@ function render() {
   const overlay = document.createElement('div');
   overlay.className = 'kernel-overlay';
   overlay.id = 'pool-overlay';
-  overlay.style.width = (state.poolSize * 54) + 'px';
-  overlay.style.height = (state.poolSize * 54) + 'px';
+  overlay.style.width = state.poolSize * 54 + 'px';
+  overlay.style.height = state.poolSize * 54 + 'px';
   overlay.style.borderColor = 'var(--pool-color)';
   overlay.style.background = 'rgba(206,147,216,0.15)';
   overlay.style.display = 'none';
@@ -200,7 +227,8 @@ function render() {
   // Output panel
   const outputPanel = document.createElement('div');
   outputPanel.className = 'conv-panel';
-  outputPanel.innerHTML = '<div class="conv-panel-title" style="color:var(--output-color)">출력</div>';
+  outputPanel.innerHTML =
+    '<div class="conv-panel-title" style="color:var(--output-color)">출력</div>';
 
   const outputGrid = document.createElement('div');
   outputGrid.className = 'conv-grid';
@@ -231,12 +259,12 @@ function showStep(stepIdx) {
   const overlay = document.getElementById('pool-overlay');
   if (overlay) {
     overlay.style.display = 'block';
-    overlay.style.top = (step.positions[0].row * 54) + 'px';
-    overlay.style.left = (step.positions[0].col * 54) + 'px';
+    overlay.style.top = step.positions[0].row * 54 + 'px';
+    overlay.style.left = step.positions[0].col * 54 + 'px';
   }
 
   // Clear highlights
-  document.querySelectorAll('#pool-input-grid .conv-cell').forEach(c => {
+  document.querySelectorAll('#pool-input-grid .conv-cell').forEach((c) => {
     c.classList.remove('active');
     c.classList.remove('max-selected');
   });
@@ -255,7 +283,7 @@ function showStep(stepIdx) {
   // Update detail
   const opPanel = document.getElementById('pool-op-detail');
   if (opPanel) {
-    const valStr = step.values.map(v => fmt(v, 0)).join(', ');
+    const valStr = step.values.map((v) => fmt(v, 0)).join(', ');
     const typeLabel = state.poolType === 'max' ? 'Max' : 'Average';
     opPanel.innerHTML = `
       <h4 style="color:var(--pool-color)">단계 ${stepIdx + 1}/${state.steps.length}</h4>
@@ -300,6 +328,7 @@ function play() {
     state.currentStep++;
     if (state.currentStep >= state.steps.length) {
       pause();
+      if (window.__cnnProgress) window.__cnnProgress.save('section-pooling');
       return;
     }
     showStep(state.currentStep);
@@ -318,4 +347,130 @@ function pause() {
 function resetAnim() {
   pause();
   state.currentStep = -1;
+}
+
+// ===== Before/After 비교 모드 =====
+let poolCompareActive = false;
+
+function setupPoolCompare() {
+  const btn = document.getElementById('pool-compare-btn');
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    poolCompareActive = !poolCompareActive;
+    btn.classList.toggle('active', poolCompareActive);
+    const mainViz = document.getElementById('pooling-container');
+    const compareViz = document.getElementById('pool-compare-container');
+    if (poolCompareActive) {
+      mainViz.style.display = 'none';
+      compareViz.style.display = 'grid';
+      renderPoolCompare();
+    } else {
+      mainViz.style.display = '';
+      compareViz.style.display = 'none';
+    }
+  });
+}
+
+function computePool(input, poolType, poolSize, stride) {
+  const H = input.length;
+  const W = input[0].length;
+  const outH = Math.floor((H - poolSize) / stride) + 1;
+  const outW = Math.floor((W - poolSize) / stride) + 1;
+  if (outH < 1 || outW < 1) return null;
+  const output = [];
+  for (let i = 0; i < outH; i++) {
+    output.push([]);
+    for (let j = 0; j < outW; j++) {
+      const values = [];
+      for (let ki = 0; ki < poolSize; ki++) {
+        for (let kj = 0; kj < poolSize; kj++) {
+          values.push(input[i * stride + ki][j * stride + kj]);
+        }
+      }
+      if (poolType === 'max') {
+        output[i].push(Math.max(...values));
+      } else {
+        output[i].push(
+          Math.round(
+            (values.reduce((a, b) => a + b, 0) / values.length) * 100,
+          ) / 100,
+        );
+      }
+    }
+  }
+  return output;
+}
+
+function renderPoolCompare() {
+  const container = document.getElementById('pool-compare-container');
+  if (!container) return;
+  container.innerHTML = '';
+
+  const input = state.input;
+  const K = state.poolSize;
+  const S = state.stride;
+
+  const configs = [
+    { label: 'Max Pooling', type: 'max' },
+    { label: 'Average Pooling', type: 'avg' },
+  ];
+
+  configs.forEach((cfg, idx) => {
+    const panel = document.createElement('div');
+    panel.className = `compare-panel compare-panel-${idx === 0 ? 'a' : 'b'}`;
+
+    const title = document.createElement('div');
+    title.className = 'compare-panel-title';
+    title.textContent = cfg.label;
+    panel.appendChild(title);
+
+    const output = computePool(input, cfg.type, K, S);
+    if (!output) {
+      panel.innerHTML +=
+        '<p style="color:var(--text-secondary);text-align:center;">유효하지 않은 파라미터</p>';
+      container.appendChild(panel);
+      return;
+    }
+
+    const outH = output.length;
+    const outW = output[0].length;
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'compare-grid-wrapper';
+    const grid = document.createElement('div');
+    grid.className = 'conv-grid';
+    grid.style.gridTemplateColumns = `repeat(${outW}, 44px)`;
+
+    const allVals = output.flat();
+    const omin = Math.min(...allVals);
+    const omax = Math.max(...allVals);
+
+    for (let i = 0; i < outH; i++) {
+      for (let j = 0; j < outW; j++) {
+        const cell = document.createElement('div');
+        cell.className = 'conv-cell';
+        cell.style.width = '42px';
+        cell.style.height = '42px';
+        cell.style.fontSize = '0.75rem';
+        cell.textContent = fmt(output[i][j]);
+        cell.style.background = valueToColor(
+          output[i][j],
+          omin,
+          omax,
+          cfg.type === 'max' ? 'purple' : 'green',
+        );
+        grid.appendChild(cell);
+      }
+    }
+    wrapper.appendChild(grid);
+    panel.appendChild(wrapper);
+
+    const info = document.createElement('div');
+    info.style.cssText =
+      'text-align:center;color:var(--text-secondary);font-size:0.8rem;margin-top:8px;';
+    info.textContent = `${outH}×${outW} | ${cfg.type === 'max' ? '최댓값 선택' : '평균값 계산'}`;
+    panel.appendChild(info);
+
+    container.appendChild(panel);
+  });
 }

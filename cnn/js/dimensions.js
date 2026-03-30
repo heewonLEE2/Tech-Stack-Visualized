@@ -15,8 +15,8 @@ const PRESETS = {
       { type: 'flatten', name: 'Flatten' },
       { type: 'fc', name: 'FC1', out: 120 },
       { type: 'fc', name: 'FC2', out: 84 },
-      { type: 'output', name: 'Output', out: 10 }
-    ]
+      { type: 'output', name: 'Output', out: 10 },
+    ],
   },
   simple: {
     name: 'Simple 3-layer',
@@ -32,9 +32,9 @@ const PRESETS = {
       { type: 'relu', name: 'ReLU' },
       { type: 'flatten', name: 'Flatten' },
       { type: 'fc', name: 'FC', out: 64 },
-      { type: 'output', name: 'Output', out: 10 }
-    ]
-  }
+      { type: 'output', name: 'Output', out: 10 },
+    ],
+  },
 };
 
 let currentPreset = 'lenet';
@@ -84,7 +84,8 @@ export function initDimensions() {
 
       if (item.detail) {
         const detail = document.createElement('div');
-        detail.style.cssText = 'font-size:0.8rem;color:var(--text-secondary);margin-top:4px;';
+        detail.style.cssText =
+          'font-size:0.8rem;color:var(--text-secondary);margin-top:4px;';
         detail.textContent = item.detail;
         block.appendChild(name);
         block.appendChild(shape);
@@ -109,21 +110,29 @@ export function initDimensions() {
   wSlider.addEventListener('input', renderPipeline);
 
   // Preset buttons
-  document.querySelectorAll('.dim-preset-btn').forEach(btn => {
+  document.querySelectorAll('.dim-preset-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
       currentPreset = btn.dataset.preset;
-      document.querySelectorAll('.dim-preset-btn').forEach(b => b.classList.remove('active'));
+      document
+        .querySelectorAll('.dim-preset-btn')
+        .forEach((b) => b.classList.remove('active'));
       btn.classList.add('active');
       renderPipeline();
+      if (window.__cnnProgress) window.__cnnProgress.save('section-dimensions');
     });
   });
 
-  document.querySelector('.dim-preset-btn[data-preset="lenet"]')?.classList.add('active');
+  document
+    .querySelector('.dim-preset-btn[data-preset="lenet"]')
+    ?.classList.add('active');
   renderPipeline();
 }
 
 function computeShapes(layers, H, W) {
-  let B = 1, C = 1, curH = H, curW = W;
+  let B = 1,
+    C = 1,
+    curH = H,
+    curW = W;
   const result = [];
 
   for (const layer of layers) {
@@ -131,8 +140,9 @@ function computeShapes(layers, H, W) {
       case 'input':
         C = layer.cin;
         result.push({
-          type: 'input', name: layer.name,
-          shape: `[${B}, ${C}, ${curH}, ${curW}]`
+          type: 'input',
+          name: layer.name,
+          shape: `[${B}, ${C}, ${curH}, ${curW}]`,
         });
         break;
 
@@ -141,10 +151,11 @@ function computeShapes(layers, H, W) {
         const oW = outputSize(curW, layer.k, layer.p, layer.s);
         if (oH < 1 || oW < 1) {
           result.push({
-            type: 'conv', name: layer.name,
+            type: 'conv',
+            name: layer.name,
             shape: 'INVALID',
             detail: `k=${layer.k}, s=${layer.s}, p=${layer.p}`,
-            error: `출력 크기 < 1: (${curH}-${layer.k}+2*${layer.p})/${layer.s}+1`
+            error: `출력 크기 < 1: (${curH}-${layer.k}+2*${layer.p})/${layer.s}+1`,
           });
           return result;
         }
@@ -152,18 +163,20 @@ function computeShapes(layers, H, W) {
         curH = oH;
         curW = oW;
         result.push({
-          type: 'conv', name: layer.name,
+          type: 'conv',
+          name: layer.name,
           shape: `[${B}, ${C}, ${curH}, ${curW}]`,
-          detail: `k=${layer.k}, s=${layer.s}, p=${layer.p}`
+          detail: `k=${layer.k}, s=${layer.s}, p=${layer.p}`,
         });
         break;
       }
 
       case 'relu':
         result.push({
-          type: 'relu', name: layer.name,
+          type: 'relu',
+          name: layer.name,
           shape: `[${B}, ${C}, ${curH}, ${curW}]`,
-          detail: 'shape 변화 없음'
+          detail: 'shape 변화 없음',
         });
         break;
 
@@ -172,19 +185,21 @@ function computeShapes(layers, H, W) {
         const oW = outputSize(curW, layer.k, 0, layer.s);
         if (oH < 1 || oW < 1) {
           result.push({
-            type: 'pool', name: layer.name,
+            type: 'pool',
+            name: layer.name,
             shape: 'INVALID',
             detail: `k=${layer.k}, s=${layer.s}`,
-            error: `출력 크기 < 1`
+            error: `출력 크기 < 1`,
           });
           return result;
         }
         curH = oH;
         curW = oW;
         result.push({
-          type: 'pool', name: layer.name,
+          type: 'pool',
+          name: layer.name,
           shape: `[${B}, ${C}, ${curH}, ${curW}]`,
-          detail: `k=${layer.k}, s=${layer.s}`
+          detail: `k=${layer.k}, s=${layer.s}`,
         });
         break;
       }
@@ -192,9 +207,10 @@ function computeShapes(layers, H, W) {
       case 'flatten': {
         const flatSize = C * curH * curW;
         result.push({
-          type: 'flatten', name: layer.name,
+          type: 'flatten',
+          name: layer.name,
           shape: `[${B}, ${flatSize}]`,
-          detail: `${C}×${curH}×${curW} = ${flatSize}`
+          detail: `${C}×${curH}×${curW} = ${flatSize}`,
         });
         C = flatSize;
         curH = 1;
@@ -204,18 +220,20 @@ function computeShapes(layers, H, W) {
 
       case 'fc':
         result.push({
-          type: 'fc', name: layer.name,
+          type: 'fc',
+          name: layer.name,
           shape: `[${B}, ${layer.out}]`,
-          detail: `${C} → ${layer.out}`
+          detail: `${C} → ${layer.out}`,
         });
         C = layer.out;
         break;
 
       case 'output':
         result.push({
-          type: 'output', name: layer.name,
+          type: 'output',
+          name: layer.name,
           shape: `[${B}, ${layer.out}]`,
-          detail: `${layer.out} classes`
+          detail: `${layer.out} classes`,
         });
         break;
     }
