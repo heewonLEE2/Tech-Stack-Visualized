@@ -1,0 +1,1296 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RAG · LangChain · LangGraph 개념정리</title>
+    <style>
+      /* ── Reset & Base ───────────────────────────────── */
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        font-family:
+          'Pretendard', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+        background: #0f0f1a;
+        color: #e0e0e0;
+        line-height: 1.7;
+        overflow-x: hidden;
+      }
+
+      /* ── Header ─────────────────────────────────────── */
+      header {
+        text-align: center;
+        padding: 60px 20px 30px;
+      }
+      header h1 {
+        font-size: 2.4rem;
+        background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 8px;
+      }
+      header p {
+        color: #9ca3af;
+        font-size: 1.05rem;
+      }
+
+      /* ── Navigation Tabs ────────────────────────────── */
+      .tab-bar {
+        display: flex;
+        justify-content: center;
+        gap: 6px;
+        padding: 0 20px 30px;
+        flex-wrap: wrap;
+      }
+      .tab-btn {
+        padding: 10px 24px;
+        border: 1px solid #334155;
+        border-radius: 999px;
+        background: transparent;
+        color: #94a3b8;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: all 0.25s;
+      }
+      .tab-btn:hover {
+        border-color: #60a5fa;
+        color: #60a5fa;
+      }
+      .tab-btn.active {
+        background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+        color: #fff;
+        border-color: transparent;
+      }
+
+      /* ── Diagram Section ────────────────────────────── */
+      .diagram-section {
+        display: flex;
+        justify-content: center;
+        padding: 20px 20px 50px;
+      }
+      .concentric {
+        position: relative;
+        width: min(700px, 90vw);
+        height: min(700px, 90vw);
+      }
+
+      /* Shared ring style */
+      .ring {
+        position: absolute;
+        border-radius: 50%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        text-align: center;
+        cursor: pointer;
+        transition:
+          transform 0.35s ease,
+          box-shadow 0.35s ease,
+          filter 0.35s ease;
+      }
+      .ring:hover {
+        transform: scale(1.018);
+      }
+
+      /* Layer 0 – AI / LLM 생태계 */
+      .ring-ecosystem {
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        background: radial-gradient(
+          circle at 40% 35%,
+          #1a1a2e 0%,
+          #0f0f1a 100%
+        );
+        border: 2px solid #1e293b;
+        box-shadow: 0 0 60px rgba(30, 41, 59, 0.5);
+        padding-top: 28px;
+      }
+      .ring-ecosystem:hover {
+        box-shadow: 0 0 80px rgba(51, 65, 85, 0.6);
+      }
+
+      /* Layer 1 – RAG */
+      .ring-rag {
+        width: 78%;
+        height: 78%;
+        top: 16%;
+        left: 11%;
+        background: radial-gradient(circle at 45% 40%, #172554, #1e1b4b);
+        border: 2.5px solid #3b82f6;
+        box-shadow: 0 0 40px rgba(59, 130, 246, 0.15);
+        padding-top: 22px;
+      }
+      .ring-rag:hover {
+        box-shadow: 0 0 60px rgba(59, 130, 246, 0.35);
+      }
+
+      /* Layer 2 – LangChain */
+      .ring-langchain {
+        width: 60%;
+        height: 60%;
+        top: 28%;
+        left: 20%;
+        background: radial-gradient(circle at 50% 45%, #2e1065, #1e1b4b);
+        border: 2.5px solid #8b5cf6;
+        box-shadow: 0 0 40px rgba(139, 92, 246, 0.12);
+        padding-top: 20px;
+      }
+      .ring-langchain:hover {
+        box-shadow: 0 0 60px rgba(139, 92, 246, 0.35);
+      }
+
+      /* Layer 3 – LangGraph */
+      .ring-langgraph {
+        width: 38%;
+        height: 38%;
+        top: 40%;
+        left: 31%;
+        background: radial-gradient(circle at 50% 45%, #831843, #4a044e);
+        border: 2.5px solid #ec4899;
+        box-shadow: 0 0 35px rgba(236, 72, 153, 0.1);
+        padding-top: 18px;
+      }
+      .ring-langgraph:hover {
+        box-shadow: 0 0 55px rgba(236, 72, 153, 0.35);
+      }
+
+      /* Ring labels */
+      .ring-label {
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        pointer-events: none;
+      }
+      .ring-ecosystem .ring-label {
+        font-size: clamp(0.85rem, 2vw, 1.05rem);
+        color: #64748b;
+      }
+      .ring-rag .ring-label {
+        font-size: clamp(0.95rem, 2.2vw, 1.2rem);
+        color: #60a5fa;
+      }
+      .ring-langchain .ring-label {
+        font-size: clamp(0.95rem, 2.2vw, 1.15rem);
+        color: #a78bfa;
+      }
+      .ring-langgraph .ring-label {
+        font-size: clamp(0.9rem, 2vw, 1.1rem);
+        color: #f472b6;
+      }
+
+      .ring-sub {
+        font-size: clamp(0.65rem, 1.4vw, 0.82rem);
+        color: #94a3b8;
+        margin-top: 2px;
+        pointer-events: none;
+      }
+
+      /* ── Content Sections ───────────────────────────── */
+      .sections {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 0 24px 80px;
+      }
+
+      .concept-card {
+        display: none;
+        animation: fadeUp 0.4s ease both;
+      }
+      .concept-card.visible {
+        display: block;
+      }
+
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translateY(18px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .card-header {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 28px;
+      }
+      .card-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+      }
+      .card-header h2 {
+        font-size: 1.8rem;
+      }
+
+      /* Color themes */
+      .theme-rag .card-icon {
+        background: #1e3a5f;
+      }
+      .theme-rag .card-header h2 {
+        color: #60a5fa;
+      }
+      .theme-lc .card-icon {
+        background: #3b1f7a;
+      }
+      .theme-lc .card-header h2 {
+        color: #a78bfa;
+      }
+      .theme-lg .card-icon {
+        background: #6b1745;
+      }
+      .theme-lg .card-header h2 {
+        color: #f472b6;
+      }
+
+      .card-body p {
+        margin-bottom: 16px;
+        color: #cbd5e1;
+      }
+      .card-body strong {
+        color: #f1f5f9;
+      }
+
+      /* Definition box */
+      .def-box {
+        background: #1e293b;
+        border-left: 4px solid;
+        border-radius: 8px;
+        padding: 20px 24px;
+        margin-bottom: 32px;
+        font-size: 1.05rem;
+      }
+      .theme-rag .def-box {
+        border-left-color: #3b82f6;
+      }
+      .theme-lc .def-box {
+        border-left-color: #8b5cf6;
+      }
+      .theme-lg .def-box {
+        border-left-color: #ec4899;
+      }
+
+      /* Pipeline flow diagram */
+      .pipeline {
+        display: flex;
+        align-items: center;
+        gap: 0;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin: 28px 0 36px;
+      }
+      .pipe-step {
+        background: #1e293b;
+        border: 1px solid #334155;
+        border-radius: 12px;
+        padding: 16px 22px;
+        text-align: center;
+        min-width: 130px;
+        transition:
+          border-color 0.2s,
+          transform 0.2s;
+      }
+      .pipe-step:hover {
+        border-color: #60a5fa;
+        transform: translateY(-3px);
+      }
+      .pipe-step .step-num {
+        display: inline-block;
+        background: #334155;
+        color: #94a3b8;
+        font-size: 0.7rem;
+        border-radius: 999px;
+        padding: 2px 10px;
+        margin-bottom: 6px;
+      }
+      .pipe-step .step-title {
+        font-weight: 700;
+        color: #f1f5f9;
+        font-size: 0.95rem;
+        margin-bottom: 4px;
+      }
+      .pipe-step .step-desc {
+        font-size: 0.8rem;
+        color: #94a3b8;
+      }
+      .pipe-arrow {
+        font-size: 1.4rem;
+        color: #475569;
+        padding: 0 6px;
+        flex-shrink: 0;
+      }
+
+      /* Feature grid */
+      .feat-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 16px;
+        margin: 24px 0 36px;
+      }
+      .feat-card {
+        background: #1e293b;
+        border: 1px solid #334155;
+        border-radius: 12px;
+        padding: 20px;
+        transition:
+          border-color 0.2s,
+          transform 0.2s;
+      }
+      .feat-card:hover {
+        border-color: #8b5cf6;
+        transform: translateY(-2px);
+      }
+      .feat-card h4 {
+        font-size: 0.95rem;
+        margin-bottom: 6px;
+        color: #e2e8f0;
+      }
+      .feat-card p {
+        font-size: 0.85rem;
+        color: #94a3b8;
+        margin: 0;
+      }
+
+      /* Graph node visual */
+      .graph-visual {
+        background: #1e293b;
+        border-radius: 16px;
+        padding: 32px 24px;
+        margin: 24px 0 36px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0;
+      }
+      .gnode {
+        background: #2d1b4e;
+        border: 2px solid #7c3aed;
+        border-radius: 12px;
+        padding: 12px 28px;
+        font-weight: 700;
+        color: #c4b5fd;
+        font-size: 0.95rem;
+        position: relative;
+        z-index: 1;
+      }
+      .gnode.pink {
+        background: #4a1942;
+        border-color: #ec4899;
+        color: #f9a8d4;
+      }
+      .gedge {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        color: #64748b;
+        font-size: 0.75rem;
+        padding: 4px 0;
+      }
+      .gedge .arrow {
+        font-size: 1.2rem;
+      }
+      .gedge .elabel {
+        font-style: italic;
+      }
+
+      .graph-row {
+        display: flex;
+        align-items: center;
+        gap: 60px;
+        position: relative;
+      }
+      .graph-row::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: calc(50% - 28px);
+        width: 56px;
+        height: 2px;
+        background: #475569;
+      }
+
+      /* Project mapping box */
+      .project-box {
+        background: linear-gradient(135deg, #1a1a2e, #1e293b);
+        border: 1px solid #334155;
+        border-radius: 14px;
+        padding: 28px;
+        margin-top: 20px;
+      }
+      .project-box h3 {
+        font-size: 1.1rem;
+        margin-bottom: 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .project-box h3 .badge {
+        background: #22c55e;
+        color: #052e16;
+        font-size: 0.65rem;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 999px;
+      }
+      .project-box h3 .badge.unused {
+        background: #64748b;
+        color: #1e293b;
+      }
+      .project-box ul {
+        padding-left: 20px;
+        color: #94a3b8;
+        font-size: 0.92rem;
+      }
+      .project-box li {
+        margin-bottom: 6px;
+      }
+      .project-box code {
+        background: #334155;
+        padding: 2px 7px;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        color: #e2e8f0;
+      }
+
+      /* Comparison table */
+      .compare-section {
+        margin-top: 36px;
+      }
+      .compare-section h3 {
+        font-size: 1.2rem;
+        margin-bottom: 16px;
+        color: #f1f5f9;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+        margin-bottom: 24px;
+      }
+      thead {
+        background: #1e293b;
+      }
+      th {
+        padding: 14px 16px;
+        text-align: left;
+        color: #94a3b8;
+        font-weight: 600;
+        border-bottom: 2px solid #334155;
+      }
+      td {
+        padding: 12px 16px;
+        border-bottom: 1px solid #1e293b;
+        color: #cbd5e1;
+      }
+      tr:hover td {
+        background: rgba(30, 41, 59, 0.5);
+      }
+
+      /* Relationship arrows (between sections) */
+      .rel-banner {
+        text-align: center;
+        padding: 24px 0;
+        color: #475569;
+        font-size: 1.6rem;
+      }
+
+      /* Responsive */
+      @media (max-width: 600px) {
+        header h1 {
+          font-size: 1.6rem;
+        }
+        .concentric {
+          width: 95vw;
+          height: 95vw;
+        }
+        .pipeline {
+          flex-direction: column;
+        }
+        .pipe-arrow {
+          transform: rotate(90deg);
+        }
+        .graph-row {
+          flex-direction: column;
+          gap: 0;
+        }
+        .graph-row::before {
+          display: none;
+        }
+      }
+
+      /* Scroll-to-top */
+      .scroll-top {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: #334155;
+        color: #e2e8f0;
+        border: none;
+        font-size: 1.2rem;
+        cursor: pointer;
+        opacity: 0;
+        transition: opacity 0.3s;
+        z-index: 100;
+      }
+      .scroll-top.show {
+        opacity: 1;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ══════════════════════════════════════════════════
+     Header
+     ══════════════════════════════════════════════════ -->
+    <header>
+      <h1>RAG · LangChain · LangGraph</h1>
+      <p>개념정리 — 포함 관계와 핵심 구성요소</p>
+    </header>
+
+    <!-- ══════════════════════════════════════════════════
+     Tab Navigation
+     ══════════════════════════════════════════════════ -->
+    <nav class="tab-bar">
+      <button class="tab-btn active" data-tab="overview">📊 전체 구조</button>
+      <button class="tab-btn" data-tab="rag">🔍 RAG</button>
+      <button class="tab-btn" data-tab="langchain">🔗 LangChain</button>
+      <button class="tab-btn" data-tab="langgraph">🕸️ LangGraph</button>
+      <button class="tab-btn" data-tab="compare">⚖️ 비교</button>
+    </nav>
+
+    <!-- ══════════════════════════════════════════════════
+     Concentric Diagram
+     ══════════════════════════════════════════════════ -->
+    <section class="diagram-section">
+      <div class="concentric">
+        <!-- L0 – Ecosystem -->
+        <div class="ring ring-ecosystem" data-target="overview">
+          <span class="ring-label">AI / LLM 생태계</span>
+          <span class="ring-sub">Generative AI 전반</span>
+        </div>
+
+        <!-- L1 – RAG -->
+        <div class="ring ring-rag" data-target="rag">
+          <span class="ring-label">RAG</span>
+          <span class="ring-sub">아키텍처 패턴</span>
+        </div>
+
+        <!-- L2 – LangChain -->
+        <div class="ring ring-langchain" data-target="langchain">
+          <span class="ring-label">LangChain</span>
+          <span class="ring-sub">구현 프레임워크</span>
+        </div>
+
+        <!-- L3 – LangGraph -->
+        <div class="ring ring-langgraph" data-target="langgraph">
+          <span class="ring-label">LangGraph</span>
+          <span class="ring-sub">에이전트 확장</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════
+     Content Sections
+     ══════════════════════════════════════════════════ -->
+    <div class="sections">
+      <!-- ─── Overview ─────────────────────────────────── -->
+      <article class="concept-card visible" id="card-overview">
+        <div class="card-header">
+          <h2 style="color: #94a3b8">포함 관계 한눈에 보기</h2>
+        </div>
+        <div class="card-body">
+          <p>
+            위 다이어그램에서 <strong>바깥 원일수록 더 넓은 개념</strong>입니다.
+            각 원을 클릭하면 상세 설명으로 이동합니다.
+          </p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>계층</th>
+                <th>이름</th>
+                <th>성격</th>
+                <th>비유</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="color: #64748b">L0</td>
+                <td>AI / LLM 생태계</td>
+                <td>전체 맥락</td>
+                <td>🌍 지구</td>
+              </tr>
+              <tr>
+                <td style="color: #60a5fa">L1</td>
+                <td>RAG</td>
+                <td>
+                  <strong>아키텍처 패턴</strong> — "검색해서 대답하자"라는 설계
+                  철학
+                </td>
+                <td>🏗️ 건축 설계도</td>
+              </tr>
+              <tr>
+                <td style="color: #a78bfa">L2</td>
+                <td>LangChain</td>
+                <td>
+                  <strong>구현 프레임워크</strong> — RAG(및 여러 LLM 앱)를
+                  실제로 만드는 도구 상자
+                </td>
+                <td>🧰 공구 세트</td>
+              </tr>
+              <tr>
+                <td style="color: #f472b6">L3</td>
+                <td>LangGraph</td>
+                <td>
+                  <strong>확장 라이브러리</strong> — LangChain 위에서 복잡한
+                  에이전트/워크플로우를 그래프로 구현
+                </td>
+                <td>🔀 고급 배선도</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="project-box">
+            <h3>🎮 이 프로젝트 (Steam 게임 추천 챗봇) 에서는?</h3>
+            <ul>
+              <li>
+                <strong style="color: #60a5fa">RAG</strong> 패턴을 사용하여
+                8,301개 게임 데이터에서 관련 게임을 <em>검색</em>하고
+                GPT-4o-mini가 <em>추천을 생성</em>합니다.
+              </li>
+              <li>
+                <strong style="color: #a78bfa">LangChain</strong>의
+                <code>ChatPromptTemplate</code>, <code>RunnableLambda</code>,
+                <code>ChromaDB Retriever</code> 등을 활용해 파이프라인을
+                구현했습니다.
+              </li>
+              <li>
+                <strong style="color: #f472b6">LangGraph</strong>는 현재 미사용
+                — 멀티턴 대화관리, 조건 분기 등 복잡한 에이전트가 필요해지면
+                도입할 수 있습니다.
+              </li>
+            </ul>
+          </div>
+        </div>
+      </article>
+
+      <!-- ─── RAG ──────────────────────────────────────── -->
+      <article class="concept-card theme-rag" id="card-rag">
+        <div class="card-header">
+          <div class="card-icon">🔍</div>
+          <h2>
+            RAG
+            <small style="color: #94a3b8; font-weight: 400"
+              >Retrieval-Augmented Generation</small
+            >
+          </h2>
+        </div>
+        <div class="card-body">
+          <div class="def-box">
+            <strong>정의:</strong> LLM이 답변을 생성하기 <em>전에</em>, 외부
+            지식 저장소에서 관련 정보를 <strong>검색(Retrieve)</strong>하여
+            프롬프트에 <strong>보강(Augment)</strong>한 뒤
+            <strong>생성(Generate)</strong>하는 아키텍처 패턴.
+          </div>
+
+          <h3 style="margin-bottom: 16px; color: #e2e8f0">
+            왜 RAG가 필요한가?
+          </h3>
+          <p>
+            <strong>LLM의 한계:</strong> 학습 데이터 이후의 정보를 모르고(시간
+            제한), 전문 도메인 지식이 부족하며(환각 위험), 대규모 데이터를
+            파인튜닝하는 것은 비용이 큽니다.
+          </p>
+          <p>
+            <strong>RAG의 해결:</strong> 외부 DB에서 최신·정확한 정보를 가져와
+            LLM에 전달하므로, 파인튜닝 없이도 도메인 특화 답변을 생성할 수
+            있습니다.
+          </p>
+
+          <h3 style="margin: 24px 0 8px; color: #e2e8f0">3단계 파이프라인</h3>
+          <div class="pipeline">
+            <div class="pipe-step">
+              <div class="step-num">STEP 1</div>
+              <div class="step-title">📥 Retrieve</div>
+              <div class="step-desc">사용자 질문으로<br />관련 문서 검색</div>
+            </div>
+            <div class="pipe-arrow">→</div>
+            <div class="pipe-step">
+              <div class="step-num">STEP 2</div>
+              <div class="step-title">📝 Augment</div>
+              <div class="step-desc">검색 결과를<br />프롬프트에 삽입</div>
+            </div>
+            <div class="pipe-arrow">→</div>
+            <div class="pipe-step">
+              <div class="step-num">STEP 3</div>
+              <div class="step-title">🤖 Generate</div>
+              <div class="step-desc">LLM이 맥락 기반<br />답변 생성</div>
+            </div>
+          </div>
+
+          <h3 style="margin-bottom: 12px; color: #e2e8f0">핵심 구성요소</h3>
+          <div class="feat-grid">
+            <div class="feat-card">
+              <h4>📚 Knowledge Base</h4>
+              <p>
+                원본 데이터(문서, DB, API 등)를 저장하고 검색 가능한 형태로
+                인덱싱
+              </p>
+            </div>
+            <div class="feat-card">
+              <h4>🧮 Embedding Model</h4>
+              <p>
+                텍스트를 고차원 벡터로 변환하여 의미적 유사도 계산 가능하게 함
+              </p>
+            </div>
+            <div class="feat-card">
+              <h4>🗄️ Vector Store</h4>
+              <p>
+                임베딩 벡터를 저장·검색하는 특화 DB (Chroma, Pinecone, FAISS 등)
+              </p>
+            </div>
+            <div class="feat-card">
+              <h4>🔎 Retriever</h4>
+              <p>질문과 가장 관련 높은 문서를 찾아주는 검색 모듈</p>
+            </div>
+            <div class="feat-card">
+              <h4>📋 Prompt Template</h4>
+              <p>
+                검색 결과 + 사용자 질문을 LLM이 이해할 수 있는 형식으로 조합
+              </p>
+            </div>
+            <div class="feat-card">
+              <h4>🧠 LLM</h4>
+              <p>최종 답변을 생성하는 대규모 언어 모델 (GPT-4, Claude 등)</p>
+            </div>
+          </div>
+
+          <div class="project-box">
+            <h3>
+              🎮 프로젝트에서의 RAG 적용 <span class="badge">사용중</span>
+            </h3>
+            <ul>
+              <li>
+                <strong>Knowledge Base:</strong> Steam 게임 8,301개 데이터
+                (이름, 장르, 태그, 가격, 리뷰 등)
+              </li>
+              <li>
+                <strong>Embedding:</strong>
+                <code>text-embedding-3-small</code> (OpenAI)
+              </li>
+              <li><strong>Vector Store:</strong> ChromaDB (로컬 영구 저장)</li>
+              <li>
+                <strong>Retriever:</strong> 하이브리드 검색 — 벡터 유사도 + BM25
+                키워드 검색을 RRF(Reciprocal Rank Fusion)로 결합
+              </li>
+              <li><strong>LLM:</strong> GPT-4o-mini (temperature 0.2)</li>
+              <li>
+                <strong>추가 기법:</strong> 쿼리 번역(한→영), 메타데이터 필터
+                추출, 인기도 기반 재정렬
+              </li>
+            </ul>
+          </div>
+        </div>
+      </article>
+
+      <!-- ─── LangChain ────────────────────────────────── -->
+      <article class="concept-card theme-lc" id="card-langchain">
+        <div class="card-header">
+          <div class="card-icon">🔗</div>
+          <h2>
+            LangChain
+            <small style="color: #94a3b8; font-weight: 400"
+              >LLM 애플리케이션 프레임워크</small
+            >
+          </h2>
+        </div>
+        <div class="card-body">
+          <div class="def-box">
+            <strong>정의:</strong> LLM을 활용한 애플리케이션을 빠르게 개발할 수
+            있도록 <strong>표준화된 추상화 계층</strong>과
+            <strong>컴포넌트 조합 도구</strong>를 제공하는 오픈소스 프레임워크.
+            RAG뿐 아니라 챗봇, 에이전트, 요약 등 다양한 LLM 앱을 구축할 수 있다.
+          </div>
+
+          <h3 style="margin-bottom: 8px; color: #e2e8f0">RAG와의 관계</h3>
+          <p>
+            <strong>RAG는 "무엇을 만들 것인가"</strong>(패턴)이고,
+            <strong>LangChain은 "어떻게 만들 것인가"</strong>(도구)입니다.
+            LangChain 없이도 RAG를 구현할 수 있고, LangChain으로 RAG가 아닌 것도
+            만들 수 있습니다. 하지만 LangChain은 RAG 구현을 매우 편리하게
+            해줍니다.
+          </p>
+
+          <h3 style="margin: 28px 0 14px; color: #e2e8f0">
+            핵심 추상화 (Core Abstractions)
+          </h3>
+          <div class="feat-grid">
+            <div class="feat-card">
+              <h4>💬 Chat Models</h4>
+              <p>
+                <code>ChatOpenAI</code>, <code>ChatAnthropic</code> 등 — 다양한
+                LLM을 통일된 인터페이스로 호출
+              </p>
+            </div>
+            <div class="feat-card">
+              <h4>📋 Prompt Templates</h4>
+              <p>
+                <code>ChatPromptTemplate</code> — 변수를 포함한 재사용 가능한
+                프롬프트 틀
+              </p>
+            </div>
+            <div class="feat-card">
+              <h4>📤 Output Parsers</h4>
+              <p>
+                <code>StrOutputParser</code>, <code>JsonOutputParser</code> —
+                LLM 출력을 원하는 형태로 파싱
+              </p>
+            </div>
+            <div class="feat-card">
+              <h4>🔎 Retrievers</h4>
+              <p>
+                벡터 스토어, BM25 등 다양한 검색 백엔드를 통일된 인터페이스로
+                제공
+              </p>
+            </div>
+            <div class="feat-card">
+              <h4>🔗 Runnables (LCEL)</h4>
+              <p>
+                <code>RunnableLambda</code>, <code>RunnablePassthrough</code> —
+                파이프(<code>|</code>) 연산으로 체인을 선언적 구성
+              </p>
+            </div>
+            <div class="feat-card">
+              <h4>📦 Document Loaders</h4>
+              <p>
+                PDF, CSV, 웹페이지 등 다양한 소스에서 데이터를 Document 객체로
+                로드
+              </p>
+            </div>
+            <div class="feat-card">
+              <h4>✂️ Text Splitters</h4>
+              <p>
+                긴 문서를 적절한 크기의 청크로 분할
+                (RecursiveCharacterTextSplitter 등)
+              </p>
+            </div>
+            <div class="feat-card">
+              <h4>🧮 Embeddings</h4>
+              <p>
+                <code>OpenAIEmbeddings</code> 등 — 텍스트→벡터 변환 모델의 통합
+                인터페이스
+              </p>
+            </div>
+          </div>
+
+          <h3 style="margin: 8px 0 14px; color: #e2e8f0">
+            LCEL (LangChain Expression Language)
+          </h3>
+          <p>
+            LangChain의 핵심 구성 방식. 파이프(<code>|</code>) 연산자로
+            컴포넌트를 연결하여 <strong>선언적으로</strong> 체인을 만듭니다:
+          </p>
+          <div
+            style="
+              background: #1e293b;
+              border-radius: 10px;
+              padding: 20px;
+              margin: 16px 0 24px;
+              font-family: monospace;
+              font-size: 0.9rem;
+              color: #a78bfa;
+              overflow-x: auto;
+              white-space: pre;
+            "
+          >
+            chain = prompt | llm | output_parser
+            <span style="color: #64748b"># 기본 체인</span> rag = retriever |
+            format_docs | prompt | llm
+            <span style="color: #64748b"># RAG 체인</span>
+          </div>
+
+          <div class="project-box">
+            <h3>
+              🎮 프로젝트에서의 LangChain 활용 <span class="badge">사용중</span>
+            </h3>
+            <ul>
+              <li>
+                <strong>ChatOpenAI:</strong> GPT-4o-mini 모델 호출
+                (<code>temperature=0.2</code>)
+              </li>
+              <li>
+                <strong>ChatPromptTemplate:</strong> 시스템 프롬프트, 쿼리 번역,
+                필터 추출 등 3개 템플릿
+              </li>
+              <li>
+                <strong>StrOutputParser:</strong> LLM 응답을 문자열로 파싱
+              </li>
+              <li>
+                <strong>OpenAIEmbeddings:</strong>
+                <code>text-embedding-3-small</code>로 게임 데이터 벡터화
+              </li>
+              <li>
+                <strong>Chroma:</strong> 벡터 스토어로 사용 (LangChain 통합)
+              </li>
+              <li>
+                <strong>RunnableLambda / RunnablePassthrough:</strong> LCEL 체인
+                구성에 활용
+              </li>
+            </ul>
+          </div>
+        </div>
+      </article>
+
+      <!-- ─── LangGraph ────────────────────────────────── -->
+      <article class="concept-card theme-lg" id="card-langgraph">
+        <div class="card-header">
+          <div class="card-icon">🕸️</div>
+          <h2>
+            LangGraph
+            <small style="color: #94a3b8; font-weight: 400"
+              >상태 기반 에이전트 프레임워크</small
+            >
+          </h2>
+        </div>
+        <div class="card-body">
+          <div class="def-box">
+            <strong>정의:</strong> LangChain 팀이 만든
+            <strong>그래프 기반 워크플로우 라이브러리</strong>. LLM
+            애플리케이션에 <strong>상태 관리(State)</strong>,
+            <strong>조건 분기(Conditional Edge)</strong>,
+            <strong>순환(Cycle)</strong>을 추가하여 복잡한
+            <strong>에이전트</strong>와 <strong>멀티스텝 워크플로우</strong>를
+            구현할 수 있다.
+          </div>
+
+          <h3 style="margin-bottom: 8px; color: #e2e8f0">LangChain과의 관계</h3>
+          <p>
+            <strong>LangChain의 LCEL</strong>은 데이터가 한 방향으로 흐르는
+            <strong>선형 체인(DAG)</strong>에 적합합니다. 하지만 "결과를 보고
+            다시 시도", "여러 도구 중 조건부 선택", "대화 상태 기억" 같은
+            패턴에는 한계가 있습니다. <strong>LangGraph</strong>는 이런
+            <strong>순환·분기가 필요한 복잡한 워크플로우</strong>를 해결합니다.
+          </p>
+
+          <h3 style="margin: 28px 0 14px; color: #e2e8f0">핵심 개념 3가지</h3>
+          <div class="feat-grid">
+            <div class="feat-card" style="border-color: #ec4899">
+              <h4 style="color: #f472b6">🔵 Node (노드)</h4>
+              <p>
+                각 처리 단계를 나타내는 함수. LLM 호출, 도구 실행, 데이터 전처리
+                등 한 가지 작업을 수행
+              </p>
+            </div>
+            <div class="feat-card" style="border-color: #ec4899">
+              <h4 style="color: #f472b6">➡️ Edge (엣지)</h4>
+              <p>
+                노드 간 연결. <strong>일반 엣지</strong>(항상 이동)와
+                <strong>조건부 엣지</strong>(상태에 따라 분기)가 있음
+              </p>
+            </div>
+            <div class="feat-card" style="border-color: #ec4899">
+              <h4 style="color: #f472b6">💾 State (상태)</h4>
+              <p>
+                그래프 전체에서 공유되는 딕셔너리. 각 노드가 읽고 수정하며, 대화
+                기록·중간 결과 등을 저장
+              </p>
+            </div>
+          </div>
+
+          <h3 style="margin: 8px 0 14px; color: #e2e8f0">
+            그래프 실행 흐름 예시
+          </h3>
+          <div class="graph-visual">
+            <div class="gnode pink">START</div>
+            <div class="gedge"><span class="arrow">↓</span></div>
+            <div class="gnode">🔍 쿼리 분석</div>
+            <div class="gedge">
+              <span class="arrow">↓</span><span class="elabel">조건 분기</span>
+            </div>
+            <div class="graph-row">
+              <div class="gnode">📚 RAG 검색</div>
+              <div class="gnode">🛠️ 도구 호출</div>
+            </div>
+            <div class="gedge"><span class="arrow">↓</span></div>
+            <div class="gnode">🤖 답변 생성</div>
+            <div class="gedge">
+              <span class="arrow">↓</span
+              ><span class="elabel">품질 체크 → 불충분 시 재검색</span>
+            </div>
+            <div class="gnode pink">END</div>
+          </div>
+
+          <h3 style="margin-bottom: 12px; color: #e2e8f0">
+            LCEL Chain vs LangGraph 비교
+          </h3>
+          <table>
+            <thead>
+              <tr>
+                <th></th>
+                <th>LCEL Chain</th>
+                <th>LangGraph</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>구조</strong></td>
+                <td>선형/DAG (방향 비순환)</td>
+                <td>그래프 (순환 가능)</td>
+              </tr>
+              <tr>
+                <td><strong>상태 관리</strong></td>
+                <td>입력→출력 단방향 전달</td>
+                <td>공유 State 딕셔너리</td>
+              </tr>
+              <tr>
+                <td><strong>조건 분기</strong></td>
+                <td>RunnableBranch (제한적)</td>
+                <td>Conditional Edge (유연)</td>
+              </tr>
+              <tr>
+                <td><strong>재시도/루프</strong></td>
+                <td>어려움</td>
+                <td>자연스러운 순환 지원</td>
+              </tr>
+              <tr>
+                <td><strong>적합한 경우</strong></td>
+                <td>단순 RAG, 요약, Q&A</td>
+                <td>에이전트, 멀티턴 대화, 복잡 워크플로우</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="project-box">
+            <h3>
+              🎮 프로젝트에서의 LangGraph
+              <span class="badge unused">미사용</span>
+            </h3>
+            <ul>
+              <li>
+                현재는 단일 턴 추천(질문→검색→답변)이므로 LCEL 체인으로
+                충분합니다.
+              </li>
+              <li><strong>도입 시나리오:</strong></li>
+              <li style="margin-left: 16px">
+                🔁 멀티턴 대화 — "방금 추천한 게임 말고 다른 거 알려줘" 같은
+                맥락 유지
+              </li>
+              <li style="margin-left: 16px">
+                🔀 조건 분기 — 질문 유형(추천/비교/정보)에 따라 다른 처리 경로
+              </li>
+              <li style="margin-left: 16px">
+                🛠️ 도구 사용 — Steam API 실시간 호출, 가격 비교 등 외부 도구
+                통합
+              </li>
+              <li style="margin-left: 16px">
+                ✅ 자체 검증 — 검색 결과가 불충분하면 재검색하는 루프
+              </li>
+            </ul>
+          </div>
+        </div>
+      </article>
+
+      <!-- ─── Compare ──────────────────────────────────── -->
+      <article class="concept-card" id="card-compare">
+        <div class="card-header">
+          <h2 style="color: #94a3b8">⚖️ 3개 개념 비교 총정리</h2>
+        </div>
+        <div class="card-body">
+          <table>
+            <thead>
+              <tr>
+                <th></th>
+                <th style="color: #60a5fa">RAG</th>
+                <th style="color: #a78bfa">LangChain</th>
+                <th style="color: #f472b6">LangGraph</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>본질</strong></td>
+                <td>아키텍처 패턴</td>
+                <td>개발 프레임워크</td>
+                <td>확장 라이브러리</td>
+              </tr>
+              <tr>
+                <td><strong>한 줄 요약</strong></td>
+                <td>"검색해서 답하자"</td>
+                <td>"LLM 앱을 쉽게 만들자"</td>
+                <td>"복잡한 에이전트를 그래프로"</td>
+              </tr>
+              <tr>
+                <td><strong>추상화 수준</strong></td>
+                <td>개념 / 설계 철학</td>
+                <td>코드 / 구현 도구</td>
+                <td>코드 / 상위 구성 도구</td>
+              </tr>
+              <tr>
+                <td><strong>독립 사용</strong></td>
+                <td>✅ 어떤 도구로든 구현 가능</td>
+                <td>✅ RAG 외에도 다양한 LLM 앱</td>
+                <td>⚠️ LangChain 기반 필요</td>
+              </tr>
+              <tr>
+                <td><strong>복잡도</strong></td>
+                <td>낮음 (개념 이해)</td>
+                <td>중간 (API 학습)</td>
+                <td>높음 (그래프 설계)</td>
+              </tr>
+              <tr>
+                <td><strong>핵심 키워드</strong></td>
+                <td>Retrieve, Augment, Generate</td>
+                <td>Chain, Runnable, LCEL</td>
+                <td>Node, Edge, State, Cycle</td>
+              </tr>
+              <tr>
+                <td><strong>프로젝트 사용</strong></td>
+                <td style="color: #22c55e">✅ 사용중</td>
+                <td style="color: #22c55e">✅ 사용중</td>
+                <td style="color: #64748b">⬜ 미사용</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3 style="margin: 28px 0 14px; color: #e2e8f0">
+            🎯 언제 무엇을 선택하나?
+          </h3>
+          <div class="feat-grid">
+            <div class="feat-card" style="border-color: #3b82f6">
+              <h4 style="color: #60a5fa">RAG만 — 직접 구현</h4>
+              <p>
+                간단한 프로토타입이거나 프레임워크 종속을 피하고 싶을 때. OpenAI
+                API + 벡터 DB만으로 충분히 가능.
+              </p>
+            </div>
+            <div class="feat-card" style="border-color: #8b5cf6">
+              <h4 style="color: #a78bfa">LangChain + RAG</h4>
+              <p>
+                프로덕션 수준 RAG를 빠르게 구축할 때. 컴포넌트 교체(LLM, DB
+                등)가 쉽고, 생태계가 풍부.
+              </p>
+            </div>
+            <div class="feat-card" style="border-color: #ec4899">
+              <h4 style="color: #f472b6">LangGraph + LangChain + RAG</h4>
+              <p>
+                에이전트, 멀티턴, 도구 호출, 자체 검증 루프 등 복잡한
+                워크플로우가 필요할 때.
+              </p>
+            </div>
+          </div>
+
+          <h3 style="margin: 28px 0 14px; color: #e2e8f0">📐 포함 관계 정리</h3>
+          <div
+            style="
+              background: #1e293b;
+              border-radius: 10px;
+              padding: 24px;
+              font-family: monospace;
+              font-size: 0.92rem;
+              color: #cbd5e1;
+              line-height: 2;
+              overflow-x: auto;
+            "
+          >
+            <span style="color: #64748b">/* 포함 관계 (바깥→안쪽) */</span>
+            <span style="color: #64748b">AI / LLM 생태계</span>
+            └── <span style="color: #60a5fa">RAG</span>
+            <span style="color: #64748b">← 아키텍처 패턴 (검색 + 생성)</span>
+            ├── <span style="color: #a78bfa">LangChain</span>
+            <span style="color: #64748b"
+              >← 구현 프레임워크 (RAG 외에도 사용 가능)</span
+            >
+            │ └── <span style="color: #f472b6">LangGraph</span>
+            <span style="color: #64748b">← 그래프 기반 에이전트 확장</span> ├──
+            LlamaIndex
+            <span style="color: #64748b">← 또 다른 RAG 구현 프레임워크</span>
+            └── 직접 구현
+            <span style="color: #64748b">← API + 벡터 DB 직접 연결</span>
+
+            <span style="color: #64748b">/* 관계 요약 */</span>
+            RAG ≠ LangChain
+            <span style="color: #64748b">← RAG는 패턴, LangChain은 도구</span>
+            LangGraph ⊂ LangChain 생태계
+            <span style="color: #64748b"
+              >← LangGraph는 LangChain 위에 구축</span
+            >
+            LangChain ∩ RAG
+            <span style="color: #64748b"
+              >← LangChain은 RAG 구현에 많이 쓰이지만, 그것만을 위한 건
+              아님</span
+            >
+          </div>
+        </div>
+      </article>
+    </div>
+    <!-- .sections -->
+
+    <!-- ── Scroll-to-top button ───────────────────────── -->
+    <button class="scroll-top" id="scrollTop" title="맨 위로">↑</button>
+
+    <!-- ══════════════════════════════════════════════════
+     Script
+     ══════════════════════════════════════════════════ -->
+    <script>
+      (function () {
+        // ── Tab switching ─────────────────────────────────
+        const tabs = document.querySelectorAll('.tab-btn');
+        const cards = document.querySelectorAll('.concept-card');
+
+        function activate(tabId) {
+          tabs.forEach((t) =>
+            t.classList.toggle('active', t.dataset.tab === tabId),
+          );
+          cards.forEach((c) => {
+            const match = c.id === 'card-' + tabId;
+            c.classList.toggle('visible', match);
+          });
+        }
+
+        tabs.forEach((btn) =>
+          btn.addEventListener('click', () => activate(btn.dataset.tab)),
+        );
+
+        // ── Ring click → switch tab ───────────────────────
+        document.querySelectorAll('.ring[data-target]').forEach((ring) => {
+          ring.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const target = ring.dataset.target;
+            activate(target);
+            document
+              .querySelector('.sections')
+              .scrollIntoView({ behavior: 'smooth' });
+          });
+        });
+
+        // ── Scroll-to-top button ──────────────────────────
+        const scrollBtn = document.getElementById('scrollTop');
+        window.addEventListener('scroll', () => {
+          scrollBtn.classList.toggle('show', window.scrollY > 400);
+        });
+        scrollBtn.addEventListener('click', () =>
+          window.scrollTo({ top: 0, behavior: 'smooth' }),
+        );
+      })();
+    </script>
+  </body>
+</html>

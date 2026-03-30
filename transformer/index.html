@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transformer 아키텍처 시각화</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/animations.css">
+</head>
+<body>
+  <!-- 사이드바 네비게이션 -->
+  <nav id="sidebar">
+    <div class="sidebar-header">
+      <h2>Transformer</h2>
+      <p class="sidebar-subtitle">Attention Is All You Need</p>
+    </div>
+    <ul class="nav-list">
+      <li><a href="#section-architecture" class="nav-link active" data-section="section-architecture">
+        <span class="nav-icon">◈</span> 전체 아키텍처
+      </a></li>
+      <li><a href="#section-positional" class="nav-link" data-section="section-positional">
+        <span class="nav-icon">∿</span> 입력 임베딩 & 위치 인코딩
+      </a></li>
+      <li><a href="#section-attention" class="nav-link" data-section="section-attention">
+        <span class="nav-icon">⊗</span> Scaled Dot-Product Attention
+      </a></li>
+      <li><a href="#section-multihead" class="nav-link" data-section="section-multihead">
+        <span class="nav-icon">⊞</span> 멀티-헤드 어텐션
+      </a></li>
+      <li><a href="#section-addnorm" class="nav-link" data-section="section-addnorm">
+        <span class="nav-icon">⊕</span> Add & Norm
+      </a></li>
+      <li><a href="#section-ffn" class="nav-link" data-section="section-ffn">
+        <span class="nav-icon">▤</span> 피드 포워드 네트워크
+      </a></li>
+      <li><a href="#section-decoder" class="nav-link" data-section="section-decoder">
+        <span class="nav-icon">◧</span> 디코더 특수 구조
+      </a></li>
+      <li><a href="#section-dataflow" class="nav-link" data-section="section-dataflow">
+        <span class="nav-icon">▶</span> 전체 데이터 흐름
+      </a></li>
+      <li><a href="#section-playground" class="nav-link" data-section="section-playground">
+        <span class="nav-icon">⚡</span> 실전 파이프라인
+      </a></li>
+    </ul>
+    <div class="sidebar-footer">
+      <button id="theme-toggle" class="theme-btn" title="테마 전환">
+        <span class="theme-icon">☀</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- 모바일 메뉴 버튼 -->
+  <button id="mobile-menu-btn" class="mobile-menu-btn" aria-label="메뉴 열기">☰</button>
+
+  <!-- 메인 콘텐츠 -->
+  <main id="main-content">
+    <!-- 1. 전체 아키텍처 -->
+    <section id="section-architecture" class="section">
+      <div class="section-inner">
+        <h1 class="section-title">전체 아키텍처</h1>
+        <p class="section-desc">Transformer 모델의 인코더-디코더 구조입니다. 각 블록을 클릭하면 상세 설명으로 이동합니다.</p>
+        <div class="control-row">
+          <label>인코더/디코더 레이어 수 (N):
+            <input type="range" id="layer-count-slider" min="1" max="6" value="2" class="slider">
+            <span id="layer-count-val">2</span>
+          </label>
+        </div>
+        <div id="architecture-container" class="viz-container"></div>
+      </div>
+    </section>
+
+    <!-- 2. 입력 임베딩 & 위치 인코딩 -->
+    <section id="section-positional" class="section">
+      <div class="section-inner">
+        <h1 class="section-title">입력 임베딩 & 위치 인코딩</h1>
+        <p class="section-desc">토큰을 벡터로 변환하고 위치 정보를 더합니다.</p>
+        <div class="control-row">
+          <label>위치 (pos): <input type="range" id="pos-slider" min="0" max="15" value="0" class="slider"> <span id="pos-val">0</span></label>
+          <label>차원 (i): <input type="range" id="dim-slider" min="0" max="7" value="0" class="slider"> <span id="dim-val">0</span></label>
+        </div>
+        <div class="viz-row">
+          <div id="pe-waveform" class="viz-container viz-half">
+            <h3>Sin/Cos 파형</h3>
+            <canvas id="pe-wave-canvas" width="500" height="250"></canvas>
+          </div>
+          <div id="pe-heatmap-container" class="viz-container viz-half">
+            <h3>PE 히트맵 <span class="tooltip-trigger" data-tooltip="행=위치, 열=차원. 색상이 밝을수록 값이 큼">ⓘ</span></h3>
+            <canvas id="pe-heatmap-canvas" width="400" height="300"></canvas>
+          </div>
+        </div>
+        <div id="pe-addition" class="viz-container">
+          <h3>임베딩 + PE 합산</h3>
+          <div id="pe-addition-viz"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. Scaled Dot-Product Attention -->
+    <section id="section-attention" class="section">
+      <div class="section-inner">
+        <h1 class="section-title">Scaled Dot-Product Attention</h1>
+        <p class="section-desc">
+          <span class="formula">Attention(Q, K, V) = softmax(QK<sup>T</sup> / √d<sub>k</sub>)V</span>
+        </p>
+        <div class="step-controls">
+          <button id="attn-prev" class="btn" disabled>◀ 이전</button>
+          <span id="attn-step-label" class="step-label">단계 1/5: Q, K, V 입력</span>
+          <button id="attn-next" class="btn">다음 ▶</button>
+        </div>
+        <div id="attention-container" class="viz-container"></div>
+      </div>
+    </section>
+
+    <!-- 4. 멀티-헤드 어텐션 -->
+    <section id="section-multihead" class="section">
+      <div class="section-inner">
+        <h1 class="section-title">멀티-헤드 어텐션</h1>
+        <p class="section-desc">입력을 여러 헤드로 분할하여 병렬로 어텐션을 수행합니다.</p>
+        <div class="control-row">
+          <label>헤드 수 (h): <input type="range" id="head-count-slider" min="1" max="4" value="2" class="slider"> <span id="head-count-val">2</span></label>
+        </div>
+        <div class="tab-bar" id="head-tabs"></div>
+        <div id="multihead-container" class="viz-container"></div>
+      </div>
+    </section>
+
+    <!-- 5. Add & Norm -->
+    <section id="section-addnorm" class="section">
+      <div class="section-inner">
+        <div class="title-row">
+          <h1 class="section-title">Add & Norm (잔차 연결)</h1>
+          <button id="addnorm-help-btn" class="help-btn" title="자세한 설명 보기">?</button>
+        </div>
+        <p class="section-desc">Skip connection으로 입력을 보존하고, LayerNorm으로 정규화합니다.</p>
+        <div id="addnorm-help-panel" class="help-panel" style="display:none;"></div>
+        <div id="addnorm-container" class="viz-container"></div>
+      </div>
+    </section>
+
+    <!-- 6. 피드 포워드 네트워크 -->
+    <section id="section-ffn" class="section">
+      <div class="section-inner">
+        <div class="title-row">
+          <h1 class="section-title">피드 포워드 네트워크 (FFN)</h1>
+          <button id="ffn-help-btn" class="help-btn" title="자세한 설명 보기">?</button>
+        </div>
+        <p class="section-desc">
+          <span class="formula">FFN(x) = max(0, xW₁ + b₁)W₂ + b₂</span>
+        </p>
+        <div id="ffn-help-panel" class="help-panel" style="display:none;"></div>
+        <div class="control-row">
+          <label>입력값: <input type="range" id="ffn-input-slider" min="-3" max="3" step="0.1" value="1" class="slider"> <span id="ffn-input-val">1.0</span></label>
+        </div>
+        <div id="ffn-container" class="viz-container"></div>
+      </div>
+    </section>
+
+    <!-- 7. 디코더 특수 구조 -->
+    <section id="section-decoder" class="section">
+      <div class="section-inner">
+        <h1 class="section-title">디코더 특수 구조</h1>
+        <p class="section-desc">Masked Self-Attention과 Cross-Attention의 차이를 이해합니다.</p>
+        <div class="step-controls">
+          <button id="decoder-prev" class="btn" disabled>◀ 이전</button>
+          <span id="decoder-step-label" class="step-label">단계 1/3: Masked Self-Attention</span>
+          <button id="decoder-next" class="btn">다음 ▶</button>
+        </div>
+        <div id="decoder-container" class="viz-container"></div>
+      </div>
+    </section>
+
+    <!-- 8. 전체 데이터 흐름 -->
+    <section id="section-dataflow" class="section">
+      <div class="section-inner">
+        <h1 class="section-title">전체 데이터 흐름</h1>
+        <p class="section-desc">입력부터 출력까지 데이터가 흐르는 전체 과정을 관찰합니다.</p>
+        <div class="control-row">
+          <button id="df-play" class="btn btn-primary">▶ 재생</button>
+          <button id="df-pause" class="btn" disabled>⏸ 일시정지</button>
+          <button id="df-reset" class="btn">↻ 초기화</button>
+          <label>속도: <input type="range" id="df-speed" min="0.5" max="3" step="0.5" value="1" class="slider"> <span id="df-speed-val">1x</span></label>
+        </div>
+        <div id="dataflow-container" class="viz-container"></div>
+        <div id="dataflow-detail" class="viz-container" style="display:none;">
+          <h3>중간 값 상세</h3>
+          <div id="dataflow-detail-content"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9. 실전 파이프라인 체험 -->
+    <section id="section-playground" class="section">
+      <div class="section-inner">
+        <h1 class="section-title">실전 파이프라인 체험</h1>
+        <p class="section-desc">한국어 문장을 입력하고 Transformer 처리 과정을 단계별로 추적합니다.</p>
+        <div class="control-row">
+          <input type="text" id="pg-input" class="pg-text-input"
+                 placeholder="예: 나는 학생입니다" maxlength="20" value="나는 학생입니다">
+          <button id="pg-run-btn" class="btn btn-primary">실행 ▶</button>
+        </div>
+        <div class="step-controls">
+          <button id="pg-prev" class="btn" disabled>◀ 이전</button>
+          <span id="pg-step-label" class="step-label">입력 후 "실행"을 클릭하세요</span>
+          <button id="pg-next" class="btn" disabled>다음 ▶</button>
+        </div>
+        <div id="pg-steps-container" class="viz-container">
+          <p style="color:var(--text-secondary);text-align:center;padding:40px;">
+            위에 한국어 문장을 입력하고 "실행" 버튼을 누르세요.
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- 툴팁 -->
+  <div id="tooltip" class="tooltip" style="display:none;"></div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

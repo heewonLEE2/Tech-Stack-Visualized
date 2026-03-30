@@ -1,0 +1,139 @@
+/* ===== Keyframe Animations ===== */
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideRight {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+
+@keyframes flowDown {
+  0% { stroke-dashoffset: 20; }
+  100% { stroke-dashoffset: 0; }
+}
+
+@keyframes highlightCell {
+  0% { box-shadow: 0 0 0 rgba(79,195,247,0); }
+  50% { box-shadow: 0 0 12px rgba(79,195,247,0.7); }
+  100% { box-shadow: 0 0 0 rgba(79,195,247,0); }
+}
+
+@keyframes dataParticle {
+  0% { offset-distance: 0%; opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { offset-distance: 100%; opacity: 0; }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes wavePulse {
+  0%, 100% { stroke-width: 2; }
+  50% { stroke-width: 3.5; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+/* ===== Utility Classes ===== */
+
+.anim-fade-in {
+  animation: fadeIn 0.5s ease forwards;
+}
+
+.anim-slide-up {
+  animation: slideUp 0.5s ease forwards;
+}
+
+.anim-slide-right {
+  animation: slideRight 0.4s ease forwards;
+}
+
+.anim-pulse {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.anim-scale-in {
+  animation: scaleIn 0.4s ease forwards;
+}
+
+.anim-highlight {
+  animation: highlightCell 1s ease;
+}
+
+/* Stagger delays */
+.delay-1 { animation-delay: 0.1s; }
+.delay-2 { animation-delay: 0.2s; }
+.delay-3 { animation-delay: 0.3s; }
+.delay-4 { animation-delay: 0.4s; }
+.delay-5 { animation-delay: 0.5s; }
+
+/* SVG flow animation */
+.flow-line {
+  stroke-dasharray: 6 4;
+  animation: flowDown 0.8s linear infinite;
+}
+
+/* Data particle along path */
+.data-particle {
+  animation: dataParticle 2s ease-in-out forwards;
+}
+
+/* ===== Transition Helpers ===== */
+
+.transition-all {
+  transition: all 0.3s ease;
+}
+
+.transition-opacity {
+  transition: opacity 0.3s ease;
+}
+
+.transition-transform {
+  transition: transform 0.3s ease;
+}
+
+/* Step animation for attention stages */
+.step-hidden {
+  opacity: 0;
+  transform: translateY(10px);
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.step-visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* Arrow highlight */
+.arrow-active {
+  stroke: var(--q-color) !important;
+  stroke-width: 2.5 !important;
+  filter: drop-shadow(0 0 4px rgba(79,195,247,0.5));
+}
+
+/* Vector addition animation */
+.vec-add-enter {
+  animation: slideRight 0.4s ease forwards;
+}
