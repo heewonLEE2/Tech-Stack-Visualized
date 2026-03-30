@@ -1,2 +1,2 @@
 # Tech-Stack-Visualized
-A curated collection of visual guides for deep learning architectures (CNN, ViT, RAG) and modern software engineering workflows (Git).
+This repository aims to bridge the gap between complex AI theories and practical engineering workflows through interactive HTML visualizations and structured guides.
