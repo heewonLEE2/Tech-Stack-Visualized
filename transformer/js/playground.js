@@ -1185,9 +1185,17 @@ export function initPlayground() {
     renderCurrentStep();
   }
 
-  runBtn.addEventListener('click', run);
+  runBtn.addEventListener('click', () => {
+    run();
+    if (window.__transformerProgress)
+      window.__transformerProgress.save('section-playground');
+  });
   input.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') run();
+    if (e.key === 'Enter') {
+      run();
+      if (window.__transformerProgress)
+        window.__transformerProgress.save('section-playground');
+    }
   });
 
   prevBtn.addEventListener('click', () => {

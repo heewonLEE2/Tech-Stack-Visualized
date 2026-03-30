@@ -14,6 +14,8 @@ export function initAddNorm() {
     const isOpen = helpPanel.style.display !== 'none';
     helpPanel.style.display = isOpen ? 'none' : 'block';
     helpBtn.classList.toggle('active', !isOpen);
+    if (window.__transformerProgress)
+      window.__transformerProgress.save('section-addnorm');
 
     if (!isOpen && !helpPanel.dataset.loaded) {
       helpPanel.dataset.loaded = 'true';
@@ -92,12 +94,14 @@ export function initAddNorm() {
 
   // LayerNorm
   const mean = added.reduce((a, b) => a + b, 0) / added.length;
-  const variance = added.reduce((a, b) => a + (b - mean) ** 2, 0) / added.length;
+  const variance =
+    added.reduce((a, b) => a + (b - mean) ** 2, 0) / added.length;
   const std = Math.sqrt(variance + 1e-6);
-  const normed = added.map(v => +((v - mean) / std).toFixed(3));
+  const normed = added.map((v) => +((v - mean) / std).toFixed(3));
 
   // ===== Skip Connection Diagram =====
-  const svgW = 500, svgH = 280;
+  const svgW = 500,
+    svgH = 280;
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.setAttribute('viewBox', `0 0 ${svgW} ${svgH}`);
   svg.setAttribute('width', '100%');
@@ -147,11 +151,14 @@ export function initAddNorm() {
   container.appendChild(addTitle);
 
   const row = document.createElement('div');
-  row.style.cssText = 'display:flex;flex-wrap:wrap;align-items:flex-start;gap:4px;';
+  row.style.cssText =
+    'display:flex;flex-wrap:wrap;align-items:flex-start;gap:4px;';
 
   renderMatrix(row, [input], 'x (입력)', 'var(--q-color)', { cellSize: 60 });
   renderOp(row, '+');
-  renderMatrix(row, [sublayerOut], 'Sublayer(x)', 'var(--encoder-color)', { cellSize: 60 });
+  renderMatrix(row, [sublayerOut], 'Sublayer(x)', 'var(--encoder-color)', {
+    cellSize: 60,
+  });
   renderOp(row, '=');
   renderMatrix(row, [added], '합산', '#FFA726', { cellSize: 60 });
   renderOp(row, '→ LN →');
@@ -161,7 +168,8 @@ export function initAddNorm() {
 
   // Stats display
   const stats = document.createElement('div');
-  stats.style.cssText = 'margin-top:16px;padding:12px;background:var(--bg-card);border-radius:6px;color:var(--text-secondary);font-size:0.85rem;';
+  stats.style.cssText =
+    'margin-top:16px;padding:12px;background:var(--bg-card);border-radius:6px;color:var(--text-secondary);font-size:0.85rem;';
   stats.innerHTML = `
     <strong>LayerNorm 계산:</strong><br>
     평균(μ) = ${fmt(mean, 3)} &nbsp;|&nbsp; 분산(σ²) = ${fmt(variance, 3)} &nbsp;|&nbsp; 표준편차(σ) = ${fmt(std, 3)}<br>
@@ -184,6 +192,8 @@ export function initFFN() {
     const isOpen = helpPanel.style.display !== 'none';
     helpPanel.style.display = isOpen ? 'none' : 'block';
     helpBtn.classList.toggle('active', !isOpen);
+    if (window.__transformerProgress)
+      window.__transformerProgress.save('section-ffn');
 
     if (!isOpen && !helpPanel.dataset.loaded) {
       helpPanel.dataset.loaded = 'true';
@@ -252,13 +262,19 @@ export function initFFN() {
 
   // Random weights (fixed seed for consistency)
   const W1 = Array.from({ length: d_model }, () =>
-    Array.from({ length: d_ff }, () => +(Math.random() * 2 - 1).toFixed(2))
+    Array.from({ length: d_ff }, () => +(Math.random() * 2 - 1).toFixed(2)),
   );
-  const b1 = Array.from({ length: d_ff }, () => +(Math.random() * 0.5).toFixed(2));
+  const b1 = Array.from(
+    { length: d_ff },
+    () => +(Math.random() * 0.5).toFixed(2),
+  );
   const W2 = Array.from({ length: d_ff }, () =>
-    Array.from({ length: d_model }, () => +(Math.random() * 2 - 1).toFixed(2))
+    Array.from({ length: d_model }, () => +(Math.random() * 2 - 1).toFixed(2)),
   );
-  const b2 = Array.from({ length: d_model }, () => +(Math.random() * 0.5).toFixed(2));
+  const b2 = Array.from(
+    { length: d_model },
+    () => +(Math.random() * 0.5).toFixed(2),
+  );
 
   function render() {
     container.innerHTML = '';
@@ -276,7 +292,7 @@ export function initFFN() {
     });
 
     // ReLU
-    const relu = hidden.map(v => Math.max(0, v));
+    const relu = hidden.map((v) => Math.max(0, v));
 
     // Layer 2: relu * W2 + b2
     const output = Array.from({ length: d_model }, (_, j) => {
@@ -286,31 +302,62 @@ export function initFFN() {
     });
 
     // ===== MLP Diagram =====
-    const svgW = 600, svgH = 320;
+    const svgW = 600,
+      svgH = 320;
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.setAttribute('viewBox', `0 0 ${svgW} ${svgH}`);
     svg.setAttribute('width', '100%');
     svg.style.maxWidth = svgW + 'px';
 
     const layers = [
-      { nodes: d_model, x: 60, label: '입력', values: x.map(v => +v.toFixed(2)), color: 'var(--q-color, #4FC3F7)' },
-      { nodes: d_ff, x: 250, label: 'Hidden (ReLU)', values: relu.map(v => +v.toFixed(2)), color: '#FFA726' },
-      { nodes: d_model, x: 440, label: '출력', values: output, color: '#81C784' },
+      {
+        nodes: d_model,
+        x: 60,
+        label: '입력',
+        values: x.map((v) => +v.toFixed(2)),
+        color: 'var(--q-color, #4FC3F7)',
+      },
+      {
+        nodes: d_ff,
+        x: 250,
+        label: 'Hidden (ReLU)',
+        values: relu.map((v) => +v.toFixed(2)),
+        color: '#FFA726',
+      },
+      {
+        nodes: d_model,
+        x: 440,
+        label: '출력',
+        values: output,
+        color: '#81C784',
+      },
     ];
 
     // Draw connections
     for (let l = 0; l < layers.length - 1; l++) {
-      const from = layers[l], to = layers[l + 1];
+      const from = layers[l],
+        to = layers[l + 1];
       for (let i = 0; i < from.nodes; i++) {
         for (let j = 0; j < to.nodes; j++) {
           const fy = 40 + i * ((svgH - 80) / (from.nodes - 1 || 1));
           const ty = 40 + j * ((svgH - 80) / (to.nodes - 1 || 1));
-          const alpha = l === 0 ? Math.abs(W1[i]?.[j] || 0) / 2 : Math.abs(W2[i]?.[j] || 0) / 2;
+          const alpha =
+            l === 0
+              ? Math.abs(W1[i]?.[j] || 0) / 2
+              : Math.abs(W2[i]?.[j] || 0) / 2;
 
-          const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-          line.setAttribute('x1', from.x + 20); line.setAttribute('y1', fy);
-          line.setAttribute('x2', to.x - 20); line.setAttribute('y2', ty);
-          line.setAttribute('stroke', `rgba(150,150,150,${Math.min(alpha, 0.6)})`);
+          const line = document.createElementNS(
+            'http://www.w3.org/2000/svg',
+            'line',
+          );
+          line.setAttribute('x1', from.x + 20);
+          line.setAttribute('y1', fy);
+          line.setAttribute('x2', to.x - 20);
+          line.setAttribute('y2', ty);
+          line.setAttribute(
+            'stroke',
+            `rgba(150,150,150,${Math.min(alpha, 0.6)})`,
+          );
           line.setAttribute('stroke-width', Math.max(0.3, alpha * 2));
           svg.appendChild(line);
         }
@@ -324,8 +371,12 @@ export function initFFN() {
         const val = layer.values[i];
         const isActive = val > 0;
 
-        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        circle.setAttribute('cx', layer.x); circle.setAttribute('cy', y);
+        const circle = document.createElementNS(
+          'http://www.w3.org/2000/svg',
+          'circle',
+        );
+        circle.setAttribute('cx', layer.x);
+        circle.setAttribute('cy', y);
         circle.setAttribute('r', 16);
         circle.setAttribute('fill', isActive ? layer.color : '#444');
         circle.setAttribute('stroke', layer.color);
@@ -333,33 +384,53 @@ export function initFFN() {
         circle.setAttribute('opacity', isActive ? 1 : 0.4);
         svg.appendChild(circle);
 
-        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        text.setAttribute('x', layer.x); text.setAttribute('y', y + 4);
+        const text = document.createElementNS(
+          'http://www.w3.org/2000/svg',
+          'text',
+        );
+        text.setAttribute('x', layer.x);
+        text.setAttribute('y', y + 4);
         text.setAttribute('text-anchor', 'middle');
-        text.setAttribute('fill', '#fff'); text.setAttribute('font-size', '9');
+        text.setAttribute('fill', '#fff');
+        text.setAttribute('font-size', '9');
         text.textContent = fmt(val, 1);
         svg.appendChild(text);
       }
 
       // Layer label
-      const lbl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-      lbl.setAttribute('x', layer.x); lbl.setAttribute('y', svgH - 5);
+      const lbl = document.createElementNS(
+        'http://www.w3.org/2000/svg',
+        'text',
+      );
+      lbl.setAttribute('x', layer.x);
+      lbl.setAttribute('y', svgH - 5);
       lbl.setAttribute('text-anchor', 'middle');
-      lbl.setAttribute('fill', '#888'); lbl.setAttribute('font-size', '11');
+      lbl.setAttribute('fill', '#888');
+      lbl.setAttribute('font-size', '11');
       lbl.textContent = layer.label;
       svg.appendChild(lbl);
     }
 
     // ReLU label
-    const reluLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    reluLabel.setAttribute('x', 155); reluLabel.setAttribute('y', 20);
-    reluLabel.setAttribute('fill', '#FFA726'); reluLabel.setAttribute('font-size', '11');
+    const reluLabel = document.createElementNS(
+      'http://www.w3.org/2000/svg',
+      'text',
+    );
+    reluLabel.setAttribute('x', 155);
+    reluLabel.setAttribute('y', 20);
+    reluLabel.setAttribute('fill', '#FFA726');
+    reluLabel.setAttribute('font-size', '11');
     reluLabel.textContent = 'W₁x + b₁ → ReLU';
     svg.appendChild(reluLabel);
 
-    const w2Label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    w2Label.setAttribute('x', 345); w2Label.setAttribute('y', 20);
-    w2Label.setAttribute('fill', '#81C784'); w2Label.setAttribute('font-size', '11');
+    const w2Label = document.createElementNS(
+      'http://www.w3.org/2000/svg',
+      'text',
+    );
+    w2Label.setAttribute('x', 345);
+    w2Label.setAttribute('y', 20);
+    w2Label.setAttribute('fill', '#81C784');
+    w2Label.setAttribute('font-size', '11');
     w2Label.textContent = 'W₂·ReLU + b₂';
     svg.appendChild(w2Label);
 
@@ -367,7 +438,8 @@ export function initFFN() {
 
     // Explanation
     const note = document.createElement('div');
-    note.style.cssText = 'margin-top:16px;padding:12px;background:var(--bg-card);border-radius:6px;color:var(--text-secondary);font-size:0.85rem;';
+    note.style.cssText =
+      'margin-top:16px;padding:12px;background:var(--bg-card);border-radius:6px;color:var(--text-secondary);font-size:0.85rem;';
     note.innerHTML = `
       <strong>FFN(x) = max(0, xW₁ + b₁)W₂ + b₂</strong><br>
       입력값 ${fmt(inputVal, 1)} → Hidden 레이어 (d_ff=${d_ff}) → ReLU → 출력 (d_model=${d_model})<br>
@@ -376,6 +448,16 @@ export function initFFN() {
     container.appendChild(note);
   }
 
-  slider.addEventListener('input', render);
+  slider.addEventListener('input', () => {
+    render();
+    // Code panel sync
+    const code = document.getElementById('ffn-code');
+    if (code) {
+      const inputVal = parseFloat(slider.value).toFixed(1);
+      code.textContent = `import torch.nn as nn\n\nffn = nn.Sequential(\n    nn.Linear(512, 2048),   # d_model → d_ff\n    nn.ReLU(),\n    nn.Linear(2048, 512)    # d_ff → d_model\n)\n# 입력값: ${inputVal}\n# x: [seq_len, batch, 512]\nout = ffn(x)`;
+    }
+    if (window.__transformerProgress)
+      window.__transformerProgress.save('section-ffn');
+  });
   render();
 }
