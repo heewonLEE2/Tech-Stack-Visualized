@@ -8,15 +8,24 @@ export function initArchitecture() {
   function render(N) {
     container.innerHTML = '';
     const svgW = 740,
-      blockW = 120,
+      blockW = 130,
       blockH = 36,
-      gap = 10;
-    // Encoder: 4 blocks per layer, Decoder: 6 blocks per layer
-    const encLayerH = blockH * 4 + gap * 5;
-    const decLayerH = blockH * 6 + gap * 7;
+      gap = 12;
+
+    // 각 레이어 높이: Encoder 4블록, Decoder 6블록
+    const encLayerH = 4 * blockH + 3 * gap; // 블록 4개 + 사이 간격 3개
+    const decLayerH = 6 * blockH + 5 * gap; // 블록 6개 + 사이 간격 5개
     const maxLayerH = Math.max(encLayerH, decLayerH);
-    const totalH = 220 + N * (maxLayerH + 20) + 120;
-    const encX = 160,
+    const layerSpacing = 28; // 레이어 간 화살표 공간
+
+    // SVG 좌표계: y=0 이 상단, 위로 쌓이므로 totalH를 충분히 확보
+    // 하단 영역: 입력라벨(20) + embedding(blockH) + pe(blockH) + 라벨(30) + gap
+    const bottomPad = 20 + 2 * (blockH + gap) + 30 + 16;
+    // 상단 영역: 레이어 스택 + Linear + Softmax + 라벨
+    const topPad = 3 * blockH + 3 * gap + 30;
+    const totalH = bottomPad + N * maxLayerH + (N - 1) * layerSpacing + topPad;
+
+    const encX = 120,
       decX = 440;
 
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -26,13 +35,15 @@ export function initArchitecture() {
 
     const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
     defs.innerHTML = `
-      <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
         <polygon points="0 0, 8 3, 0 6" fill="#888"/>
+      </marker>
+      <marker id="arrowhead-enc" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+        <polygon points="0 0, 8 3, 0 6" fill="#7E57C2"/>
       </marker>
     `;
     svg.appendChild(defs);
 
-    // Helper functions
     function addBlock(x, y, w, h, color, text, section, tooltip) {
       const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
       g.setAttribute('class', 'arch-block');
@@ -56,6 +67,7 @@ export function initArchitecture() {
       txt.setAttribute('x', x + w / 2);
       txt.setAttribute('y', y + h / 2 + 4);
       txt.setAttribute('text-anchor', 'middle');
+      txt.setAttribute('fill', '#fff');
       txt.setAttribute('font-size', '11');
       txt.textContent = text;
 
@@ -71,10 +83,10 @@ export function initArchitecture() {
             ?.scrollIntoView({ behavior: 'smooth' });
         });
       }
-      return g;
+      return { top: y, bottom: y + h, midX: x + w / 2, midY: y + h / 2 };
     }
 
-    function addArrow(x1, y1, x2, y2) {
+    function addArrow(x1, y1, x2, y2, color = '#666', dashed = false) {
       const line = document.createElementNS(
         'http://www.w3.org/2000/svg',
         'line',
@@ -83,60 +95,70 @@ export function initArchitecture() {
       line.setAttribute('y1', y1);
       line.setAttribute('x2', x2);
       line.setAttribute('y2', y2);
-      line.setAttribute('stroke', '#666');
+      line.setAttribute('stroke', color);
       line.setAttribute('stroke-width', 1.5);
-      line.setAttribute('marker-end', 'url(#arrowhead)');
+      line.setAttribute(
+        'marker-end',
+        color === '#666' ? 'url(#arrowhead)' : 'url(#arrowhead-enc)',
+      );
+      if (dashed) line.setAttribute('stroke-dasharray', '5,3');
       svg.appendChild(line);
     }
 
-    function addLabel(x, y, text, color, size = 13) {
+    function addLabel(x, y, text, color, size = 13, weight = 'bold') {
       const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
       t.setAttribute('x', x);
       t.setAttribute('y', y);
       t.setAttribute('text-anchor', 'middle');
       t.setAttribute('fill', color);
       t.setAttribute('font-size', size);
-      t.setAttribute('font-weight', 'bold');
+      t.setAttribute('font-weight', weight);
       t.textContent = text;
       svg.appendChild(t);
     }
 
-    function addBracket(x, y, h, color, labelText, side = 'left') {
+    function addBracket(x, yTop, yBottom, color, labelText, side = 'left') {
       const dir = side === 'left' ? -1 : 1;
-      const bx = x + dir * 12;
+      const bx = x + dir * 14;
       const path = document.createElementNS(
         'http://www.w3.org/2000/svg',
         'path',
       );
-      const d = `M${x},${y} L${bx},${y} L${bx},${y + h} L${x},${y + h}`;
-      path.setAttribute('d', d);
+      path.setAttribute(
+        'd',
+        `M${x},${yTop} L${bx},${yTop} L${bx},${yBottom} L${x},${yBottom}`,
+      );
       path.setAttribute('stroke', color);
       path.setAttribute('stroke-width', 2);
       path.setAttribute('fill', 'none');
       svg.appendChild(path);
-
-      addLabel(x + dir * 28, y + h / 2 + 4, labelText, color, 11);
+      addLabel(x + dir * 30, (yTop + yBottom) / 2 + 4, labelText, color, 11);
     }
 
-    // ===== Draw Architecture =====
-    let baseY = totalH - 60;
+    const encColor = '#7E57C2';
+    const decColor = '#26A69A';
 
-    // Input / Output labels
-    addLabel(encX + blockW / 2, baseY, '입력 (Inputs)', '#aaa', 12);
-    addLabel(
-      decX + blockW / 2,
-      baseY,
-      '출력 (Outputs, shifted right)',
-      '#aaa',
-      12,
-    );
+    // ========================================================
+    // 좌표 계산: 아래(bottom) → 위(top) 방향으로 쌓음
+    // y값이 클수록 아래. 블록 top-left를 (x, y)로 지정.
+    // ========================================================
 
-    baseY -= 40;
+    // ----- 맨 아래: 입력 라벨 -----
+    const encCX = encX + blockW / 2;
+    const decCX = decX + blockW / 2;
 
-    // Input Embedding
-    addBlock(
+    let ey = totalH - 20; // Encoder 현재 그리기 y (라벨)
+    let dy = totalH - 20; // Decoder 현재 그리기 y (라벨)
+
+    addLabel(encCX, ey, '입력 (Inputs)', '#aaa', 12, 'normal');
+    addLabel(decCX, dy, '출력 (Outputs, shifted right)', '#aaa', 12, 'normal');
+
+    // ----- Input Embedding -----
+    ey -= 22;
+    dy -= 22;
+    const encEmbed = addBlock(
       encX,
-      baseY - blockH,
+      ey - blockH,
       blockW,
       blockH,
       '#5C6BC0',
@@ -144,12 +166,12 @@ export function initArchitecture() {
       'section-positional',
       '토큰을 벡터로 변환합니다',
     );
-    addArrow(encX + blockW / 2, baseY, encX + blockW / 2, baseY + 8);
+    addArrow(encCX, ey, encCX, encEmbed.bottom); // 라벨 → 블록 하단
+    ey = encEmbed.top;
 
-    // Output Embedding
-    addBlock(
+    const decEmbed = addBlock(
       decX,
-      baseY - blockH,
+      dy - blockH,
       blockW,
       blockH,
       '#5C6BC0',
@@ -157,14 +179,15 @@ export function initArchitecture() {
       'section-positional',
       '출력 토큰을 벡터로 변환합니다',
     );
-    addArrow(decX + blockW / 2, baseY, decX + blockW / 2, baseY + 8);
+    addArrow(decCX, dy, decCX, decEmbed.bottom);
+    dy = decEmbed.top;
 
-    baseY -= blockH + 8;
-
-    // Positional Encoding
-    addBlock(
+    // ----- Positional Encoding -----
+    ey -= gap;
+    dy -= gap;
+    const encPE = addBlock(
       encX,
-      baseY - blockH,
+      ey - blockH,
       blockW,
       blockH,
       '#7986CB',
@@ -172,16 +195,12 @@ export function initArchitecture() {
       'section-positional',
       '위치 정보를 더합니다 (sin/cos)',
     );
-    addArrow(
-      encX + blockW / 2,
-      baseY,
-      encX + blockW / 2,
-      baseY - blockH + blockH,
-    );
+    addArrow(encCX, ey, encCX, encEmbed.top + 2); // Embed 상단 → PE 하단
+    ey = encPE.top;
 
-    addBlock(
+    const decPE = addBlock(
       decX,
-      baseY - blockH,
+      dy - blockH,
       blockW,
       blockH,
       '#7986CB',
@@ -189,38 +208,32 @@ export function initArchitecture() {
       'section-positional',
       '위치 정보를 더합니다 (sin/cos)',
     );
-    addArrow(
-      decX + blockW / 2,
-      baseY,
-      decX + blockW / 2,
-      baseY - blockH + blockH,
-    );
+    addArrow(decCX, dy, decCX, decEmbed.top + 2);
+    dy = decPE.top;
 
-    baseY -= blockH + 20;
-    const layerBaseY = baseY;
+    // ----- Encoder / Decoder 라벨 -----
+    ey -= 16;
+    dy -= 16;
+    addLabel(encCX, ey, 'Encoder', encColor, 14);
+    addLabel(decCX, dy, 'Decoder', decColor, 14);
+    ey -= 6;
+    dy -= 6;
 
-    // Section group labels
-    const encColor = '#7E57C2';
-    const decColor = '#26A69A';
-    addLabel(encX + blockW / 2, baseY + 12, 'Encoder', encColor, 14);
-    addLabel(decX + blockW / 2, baseY + 12, 'Decoder', decColor, 14);
+    // 각 레이어 top y(블록 최상단)를 저장
+    const encLayerTops = []; // n번 레이어의 최상단 블록 top y
+    const encLayerMidXs = []; // 크로스어텐션 화살표용 x
+    const crossAttnYs = []; // 디코더 각 레이어의 Cross-Attn 블록 중간 y
 
-    baseY -= 16;
-
-    // Track top positions for encoder/decoder
-    let encTopY = baseY;
-    let decTopY = baseY;
-
-    // ===== Encoder Layers =====
+    // ===== Encoder Layers (아래→위로 쌓음) =====
+    // n=0이 최하단 레이어, n=N-1이 최상단
+    let encLayerBottomY = ey; // 현재 레이어 시작점(하단)
     for (let n = 0; n < N; n++) {
-      const ly = baseY - n * (maxLayerH + 16);
-      let ey = ly;
+      let cy = encLayerBottomY;
 
-      // 1. Multi-Head Self-Attention
-      ey -= blockH;
-      addBlock(
+      // 블록 1: Multi-Head Attn (최하단)
+      const b1 = addBlock(
         encX,
-        ey,
+        cy - blockH,
         blockW,
         blockH,
         '#AB47BC',
@@ -228,13 +241,14 @@ export function initArchitecture() {
         'section-multihead',
         '멀티-헤드 셀프 어텐션',
       );
-      if (n === 0)
-        addArrow(encX + blockW / 2, ly, encX + blockW / 2, ey + blockH);
-      // 2. Add & Norm
-      ey -= blockH + gap;
-      addBlock(
+      addArrow(encCX, cy, encCX, b1.bottom);
+      cy = b1.top;
+
+      // 블록 2: Add & Norm
+      cy -= gap;
+      const b2 = addBlock(
         encX,
-        ey,
+        cy - blockH,
         blockW,
         blockH,
         '#EF5350',
@@ -242,17 +256,14 @@ export function initArchitecture() {
         'section-addnorm',
         '잔차 연결 + 레이어 정규화',
       );
-      addArrow(
-        encX + blockW / 2,
-        ey + blockH + gap,
-        encX + blockW / 2,
-        ey + blockH,
-      );
-      // 3. Feed Forward
-      ey -= blockH + gap;
-      addBlock(
+      addArrow(encCX, cy, encCX, b2.bottom);
+      cy = b2.top;
+
+      // 블록 3: Feed Forward
+      cy -= gap;
+      const b3 = addBlock(
         encX,
-        ey,
+        cy - blockH,
         blockW,
         blockH,
         '#FFA726',
@@ -260,17 +271,14 @@ export function initArchitecture() {
         'section-ffn',
         '2층 완전연결 네트워크',
       );
-      addArrow(
-        encX + blockW / 2,
-        ey + blockH + gap,
-        encX + blockW / 2,
-        ey + blockH,
-      );
-      // 4. Add & Norm
-      ey -= blockH + gap;
-      addBlock(
+      addArrow(encCX, cy, encCX, b3.bottom);
+      cy = b3.top;
+
+      // 블록 4: Add & Norm (최상단)
+      cy -= gap;
+      const b4 = addBlock(
         encX,
-        ey,
+        cy - blockH,
         blockW,
         blockH,
         '#EF5350',
@@ -278,32 +286,24 @@ export function initArchitecture() {
         'section-addnorm',
         '잔차 연결 + 레이어 정규화',
       );
-      addArrow(
-        encX + blockW / 2,
-        ey + blockH + gap,
-        encX + blockW / 2,
-        ey + blockH,
-      );
+      addArrow(encCX, cy, encCX, b4.bottom);
+      cy = b4.top;
 
-      encTopY = ey;
+      encLayerTops.push(cy); // 이 레이어 최상단 y
 
-      // Inter-layer arrow
-      if (n < N - 1) {
-        const nextLy = baseY - (n + 1) * (maxLayerH + 16);
-        addArrow(encX + blockW / 2, ey, encX + blockW / 2, nextLy + 2);
-      }
+      // 레이어 간 화살표 공간 확보
+      encLayerBottomY = cy - layerSpacing;
     }
 
-    // ===== Decoder Layers =====
+    // ===== Decoder Layers (아래→위로 쌓음) =====
+    let decLayerBottomY = dy;
     for (let n = 0; n < N; n++) {
-      const ly = baseY - n * (maxLayerH + 16);
-      let dy = ly;
+      let cy = decLayerBottomY;
 
-      // 1. Masked Multi-Head Self-Attention
-      dy -= blockH;
-      addBlock(
+      // 블록 1: Masked Attn
+      const d1 = addBlock(
         decX,
-        dy,
+        cy - blockH,
         blockW,
         blockH,
         '#80CBC4',
@@ -311,13 +311,14 @@ export function initArchitecture() {
         'section-decoder',
         '마스크드 셀프 어텐션 (미래 토큰 차단)',
       );
-      if (n === 0)
-        addArrow(decX + blockW / 2, ly, decX + blockW / 2, dy + blockH);
-      // 2. Add & Norm
-      dy -= blockH + gap;
-      addBlock(
+      addArrow(decCX, cy, decCX, d1.bottom);
+      cy = d1.top;
+
+      // 블록 2: Add & Norm
+      cy -= gap;
+      const d2 = addBlock(
         decX,
-        dy,
+        cy - blockH,
         blockW,
         blockH,
         '#EF5350',
@@ -325,17 +326,14 @@ export function initArchitecture() {
         'section-addnorm',
         '잔차 연결 + 레이어 정규화',
       );
-      addArrow(
-        decX + blockW / 2,
-        dy + blockH + gap,
-        decX + blockW / 2,
-        dy + blockH,
-      );
-      // 3. Cross-Attention
-      dy -= blockH + gap;
-      addBlock(
+      addArrow(decCX, cy, decCX, d2.bottom);
+      cy = d2.top;
+
+      // 블록 3: Cross Attention — 인코더 출력 수신
+      cy -= gap;
+      const d3 = addBlock(
         decX,
-        dy,
+        cy - blockH,
         blockW,
         blockH,
         '#4DB6AC',
@@ -343,17 +341,15 @@ export function initArchitecture() {
         'section-decoder',
         '인코더 출력을 K, V로 사용하는 어텐션',
       );
-      addArrow(
-        decX + blockW / 2,
-        dy + blockH + gap,
-        decX + blockW / 2,
-        dy + blockH,
-      );
-      // 4. Add & Norm
-      dy -= blockH + gap;
-      addBlock(
+      addArrow(decCX, cy, decCX, d3.bottom);
+      crossAttnYs.push(d3.midY); // Cross-Attn 블록 중간 y 저장
+      cy = d3.top;
+
+      // 블록 4: Add & Norm
+      cy -= gap;
+      const d4 = addBlock(
         decX,
-        dy,
+        cy - blockH,
         blockW,
         blockH,
         '#EF5350',
@@ -361,17 +357,14 @@ export function initArchitecture() {
         'section-addnorm',
         '잔차 연결 + 레이어 정규화',
       );
-      addArrow(
-        decX + blockW / 2,
-        dy + blockH + gap,
-        decX + blockW / 2,
-        dy + blockH,
-      );
-      // 5. Feed Forward
-      dy -= blockH + gap;
-      addBlock(
+      addArrow(decCX, cy, decCX, d4.bottom);
+      cy = d4.top;
+
+      // 블록 5: Feed Forward
+      cy -= gap;
+      const d5 = addBlock(
         decX,
-        dy,
+        cy - blockH,
         blockW,
         blockH,
         '#FFA726',
@@ -379,17 +372,14 @@ export function initArchitecture() {
         'section-ffn',
         '2층 완전연결 네트워크',
       );
-      addArrow(
-        decX + blockW / 2,
-        dy + blockH + gap,
-        decX + blockW / 2,
-        dy + blockH,
-      );
-      // 6. Add & Norm
-      dy -= blockH + gap;
-      addBlock(
+      addArrow(decCX, cy, decCX, d5.bottom);
+      cy = d5.top;
+
+      // 블록 6: Add & Norm (최상단)
+      cy -= gap;
+      const d6 = addBlock(
         decX,
-        dy,
+        cy - blockH,
         blockW,
         blockH,
         '#EF5350',
@@ -397,72 +387,54 @@ export function initArchitecture() {
         'section-addnorm',
         '잔차 연결 + 레이어 정규화',
       );
-      addArrow(
-        decX + blockW / 2,
-        dy + blockH + gap,
-        decX + blockW / 2,
-        dy + blockH,
-      );
+      addArrow(decCX, cy, decCX, d6.bottom);
+      cy = d6.top;
 
-      decTopY = dy;
-
-      // Inter-layer arrow
-      if (n < N - 1) {
-        const nextLy = baseY - (n + 1) * (maxLayerH + 16);
-        addArrow(decX + blockW / 2, dy, decX + blockW / 2, nextLy + 2);
-      }
+      decLayerBottomY = cy - layerSpacing;
     }
 
-    // ===== Cross-attention arrow from encoder TOP to each decoder cross-attn =====
+    // 실제 최상단 레이어 top y
+    const encFinalTopY = encLayerTops[N - 1];
+    const decFinalTopY = decLayerBottomY + layerSpacing; // 마지막 레이어 top
+
+    // ===== 레이어 간 화살표 (Encoder) =====
+    for (let n = 0; n < N - 1; n++) {
+      const fromY = encLayerTops[n];
+      const toY = encLayerTops[n] - layerSpacing + blockH; // 다음 레이어 첫 블록 하단
+      addArrow(encCX, fromY, encCX, toY);
+    }
+
+    // ===== 크로스 어텐션 화살표: 인코더 최상단 → 각 디코더 레이어의 Cross-Attn =====
+    // 원 논문 다이어그램처럼 인코더 출력이 모든 디코더 레이어의 Cross-Attn으로 연결
+    // 단, n번째 인코더 레이어 → n번째 디코더 레이어 (같은 층끼리)
     for (let n = 0; n < N; n++) {
-      const ly = baseY - n * (maxLayerH + 16);
-      // Cross-attn block is the 3rd block: ly - blockH - (blockH+gap) - (blockH+gap)
-      const crossAttnY =
-        ly - blockH - (blockH + gap) - (blockH + gap) + blockH / 2;
+      const srcY = encLayerTops[n] + blockH / 2; // 인코더 Add&Norm 상단 부근
+      const tgtY = crossAttnYs[n];
       const line = document.createElementNS(
         'http://www.w3.org/2000/svg',
         'line',
       );
       line.setAttribute('x1', encX + blockW + 4);
-      line.setAttribute('y1', encTopY + blockH / 2);
+      line.setAttribute('y1', srcY);
       line.setAttribute('x2', decX - 4);
-      line.setAttribute('y2', crossAttnY);
+      line.setAttribute('y2', tgtY);
       line.setAttribute('stroke', encColor);
       line.setAttribute('stroke-width', 1.5);
       line.setAttribute('stroke-dasharray', '5,3');
-      line.setAttribute('marker-end', 'url(#arrowhead)');
+      line.setAttribute('marker-end', 'url(#arrowhead-enc)');
       svg.appendChild(line);
     }
 
-    // ===== Brackets (once, outside loop) =====
-    const encBracketTop = encTopY;
-    const encBracketBottom = baseY;
-    addBracket(
-      encX - 2,
-      encBracketTop,
-      encBracketBottom - encBracketTop,
-      encColor,
-      `×${N}`,
-      'left',
-    );
+    // ===== Brackets =====
+    addBracket(encX - 2, encFinalTopY, ey, encColor, `×${N}`, 'left');
+    addBracket(decX + blockW + 2, decFinalTopY, dy, decColor, `×${N}`, 'right');
 
-    const decBracketTop = decTopY;
-    const decBracketBottom = baseY;
-    addBracket(
-      decX + blockW + 2,
-      decBracketTop,
-      decBracketBottom - decBracketTop,
-      decColor,
-      `×${N}`,
-      'right',
-    );
-
-    // ===== Arrow from decoder top to Linear =====
-    const topY = decTopY - 20;
-    addArrow(decX + blockW / 2, decTopY, decX + blockW / 2, topY + blockH);
-    addBlock(
+    // ===== Encoder 최상단 → (그냥 위로 끝냄, 인코더는 K/V로 내보냄) =====
+    // Decoder 최상단 레이어 위에 Linear, Softmax 추가
+    let outY = decFinalTopY - gap;
+    const linBlk = addBlock(
       decX,
-      topY,
+      outY - blockH,
       blockW,
       blockH,
       '#FF7043',
@@ -470,12 +442,12 @@ export function initArchitecture() {
       null,
       '선형 변환 (보캡 크기)',
     );
+    addArrow(decCX, outY, decCX, linBlk.bottom);
 
-    const softmaxY = topY - blockH - gap;
-    addArrow(decX + blockW / 2, topY, decX + blockW / 2, softmaxY + blockH);
-    addBlock(
+    const smY = linBlk.top - gap;
+    const smBlk = addBlock(
       decX,
-      softmaxY,
+      smY - blockH,
       blockW,
       blockH,
       '#FF5252',
@@ -483,8 +455,9 @@ export function initArchitecture() {
       null,
       '확률 분포로 변환',
     );
+    addArrow(decCX, smY, decCX, smBlk.bottom);
 
-    addLabel(decX + blockW / 2, softmaxY - 12, '출력 확률', '#aaa', 12);
+    addLabel(decCX, smBlk.top - 10, '출력 확률', '#aaa', 12, 'normal');
 
     container.appendChild(svg);
   }

@@ -5,6 +5,18 @@ export function initOverview() {
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
 
+  // Section IDs mapped to each block for click navigation
+  const blockSections = [
+    null, // 입력 이미지 (no target)
+    'section-patch', // 패치 분할
+    'section-patch-embed', // 패치 임베딩
+    'section-cls-token', // CLS 토큰
+    'section-pos-embed', // 위치 임베딩
+    'section-encoder', // Transformer Encoder
+    'section-mlp-head', // MLP Head
+    null, // 출력 (no target)
+  ];
+
   function draw() {
     const W = canvas.width,
       H = canvas.height;
@@ -225,6 +237,44 @@ export function initOverview() {
   }
 
   draw();
+
+  // Click navigation: click blocks to scroll to corresponding section
+  canvas.style.cursor = 'pointer';
+  canvas.addEventListener('click', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const mx = (e.clientX - rect.left) * scaleX;
+    const my = (e.clientY - rect.top) * scaleY;
+
+    const blocks = [
+      { x: 30, y: 140, w: 100, h: 120 },
+      { x: 170, y: 140, w: 100, h: 120 },
+      { x: 310, y: 140, w: 100, h: 120 },
+      { x: 450, y: 90, w: 100, h: 95 },
+      { x: 450, y: 215, w: 100, h: 95 },
+      { x: 600, y: 140, w: 120, h: 120 },
+      { x: 770, y: 140, w: 100, h: 120 },
+      { x: 910, y: 153, w: 70, h: 94 },
+    ];
+
+    for (let i = 0; i < blocks.length; i++) {
+      const b = blocks[i];
+      if (mx >= b.x && mx <= b.x + b.w && my >= b.y && my <= b.y + b.h) {
+        const sectionId = blockSections[i];
+        if (sectionId) {
+          const target = document.getElementById(sectionId);
+          if (target) target.scrollIntoView({ behavior: 'smooth' });
+        }
+        break;
+      }
+    }
+  });
+
+  // Progress save
+  if (window.__vitProgress) {
+    window.__vitProgress.save('section-overview');
+  }
 }
 
 function roundRect(ctx, x, y, w, h, r) {

@@ -219,4 +219,9 @@ export function initClassifier() {
     ctx.fillStyle = colors.output;
     ctx.fillText(`${(cls.prob * 100).toFixed(1)}%`, outX + barW + 6, y + 14);
   });
+
+  // Progress save
+  if (window.__vitProgress) {
+    window.__vitProgress.save('section-mlp-head');
+  }
 }

@@ -624,22 +624,55 @@ function drawArrow(ctx, x1, y1, x2, y2, color) {
 export function initEmbedding(type) {
   if (type === 'patch') {
     const canvas = document.getElementById('patch-embed-canvas');
-    if (canvas) drawPatchEmbedding(canvas);
+    if (canvas) {
+      drawPatchEmbedding(canvas);
+      if (window.__vitProgress)
+        window.__vitProgress.save('section-patch-embed');
+    }
   } else if (type === 'position') {
     const heatmap = document.getElementById('pos-embed-heatmap');
     const sim = document.getElementById('pos-embed-similarity');
     if (heatmap) drawPositionHeatmap(heatmap);
     if (sim) drawPositionSimilarity(sim);
+    if (window.__vitProgress) window.__vitProgress.save('section-pos-embed');
   } else if (type === 'cls') {
     const canvas = document.getElementById('cls-token-canvas');
-    if (canvas) drawClsToken(canvas);
+    if (canvas) {
+      drawClsToken(canvas);
+      if (window.__vitProgress) window.__vitProgress.save('section-cls-token');
+    }
   } else if (type === 'encoder') {
     const canvas = document.getElementById('encoder-block-canvas');
     if (canvas) {
       drawEncoderBlock(canvas);
       const slider = document.getElementById('encoder-layer-slider');
       if (slider) {
-        slider.addEventListener('input', () => drawEncoderBlock(canvas));
+        slider.addEventListener('input', () => {
+          drawEncoderBlock(canvas);
+          if (window.__vitProgress)
+            window.__vitProgress.save('section-encoder');
+          // Code panel sync
+          const L = parseInt(slider.value);
+          const codeEl = document.getElementById('encoder-code');
+          if (codeEl) {
+            codeEl.textContent = `import torch.nn as nn
+
+D = 768        # 임베딩 차원
+num_heads = 12 # 어텐션 헤드 수
+L = ${L}         # 인코더 레이어 수
+
+encoder_layer = nn.TransformerEncoderLayer(
+    d_model=D,
+    nhead=num_heads,
+    dim_feedforward=3072,  # 4 × D
+    activation='gelu',
+    norm_first=True  # Pre-Norm (ViT 스타일)
+)
+encoder = nn.TransformerEncoder(
+    encoder_layer, num_layers=${L}
+)`;
+          }
+        });
       }
     }
   }

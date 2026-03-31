@@ -1085,6 +1085,9 @@ export function initPlayground() {
       currentStep++;
       updateControls();
       renderStep(currentStep);
+      if (currentStep === STEPS.length - 1 && window.__vitProgress) {
+        window.__vitProgress.save('section-playground');
+      }
     }
   });
 }

@@ -200,6 +200,105 @@ export function initPatch() {
     drawFlatten(patchSize);
   }
 
-  patchSelect.addEventListener('change', render);
+  patchSelect.addEventListener('change', () => {
+    render();
+    if (window.__vitProgress) {
+      window.__vitProgress.save('section-patch');
+    }
+    // Code panel sync
+    const P = parseInt(patchSelect.value);
+    const N = Math.floor(224 / P);
+    const codeEl = document.getElementById('patch-code');
+    if (codeEl) {
+      codeEl.textContent = `import torch.nn as nn
+
+P = ${P}  # 패치 크기
+# Conv2d를 패치 추출기로 사용 (stride=P)
+patch_embed = nn.Conv2d(
+    in_channels=3, out_channels=768,
+    kernel_size=${P}, stride=${P}
+)
+# 입력: [1, 3, 224, 224]
+# 출력: [1, 768, ${N}, ${N}] → flatten → [1, ${N * N}, 768]
+patches = patch_embed(image).flatten(2).transpose(1, 2)`;
+    }
+  });
+
+  // Compare mode: patch 4×4 vs 16×16
+  const compareBtn = document.getElementById('patch-compare-btn');
+  const compareContainer = document.getElementById('patch-compare');
+  let compareVisible = false;
+
+  if (compareBtn && compareContainer) {
+    compareBtn.addEventListener('click', () => {
+      compareVisible = !compareVisible;
+      compareContainer.style.display = compareVisible ? 'flex' : 'none';
+      compareBtn.textContent = compareVisible
+        ? '⚖ 비교 모드 닫기'
+        : '⚖ 패치 크기 비교 (4×4 vs 16×16)';
+      if (compareVisible) renderCompare();
+    });
+  }
+
+  function renderCompare() {
+    compareContainer.innerHTML = '';
+    const configs = [
+      { patchSize: 4, label: '4×4 패치 (작은 패치)' },
+      { patchSize: 16, label: '16×16 패치 (ViT 기본값)' },
+    ];
+
+    configs.forEach((cfg, idx) => {
+      const side = document.createElement('div');
+      side.className = 'compare-side';
+
+      const icon = idx === 0 ? '🔍' : '📐';
+      side.innerHTML = `<h4>${icon} ${cfg.label}</h4>`;
+
+      const numP = Math.floor(IMG_SIZE / cfg.patchSize);
+      const totalP = numP * numP;
+      const realNumP = Math.floor(224 / cfg.patchSize);
+      const realTotalP = realNumP * realNumP;
+
+      const canvas = document.createElement('canvas');
+      canvas.width = 300;
+      canvas.height = 300;
+      canvas.style.cssText =
+        'border-radius:8px;border:1px solid var(--border-color);';
+      side.appendChild(canvas);
+
+      // Draw mini patch grid
+      const ctx = canvas.getContext('2d');
+      const scale = 300 / IMG_SIZE;
+      for (let y = 0; y < IMG_SIZE; y++) {
+        for (let x = 0; x < IMG_SIZE; x++) {
+          const [r, g, b] = imgData[y][x];
+          ctx.fillStyle = `rgb(${r},${g},${b})`;
+          ctx.fillRect(x * scale, y * scale, scale + 0.5, scale + 0.5);
+        }
+      }
+      ctx.strokeStyle = '#4fc3f7';
+      ctx.lineWidth = 1.5;
+      for (let i = 0; i <= numP; i++) {
+        const pos = i * cfg.patchSize * scale;
+        ctx.beginPath();
+        ctx.moveTo(pos, 0);
+        ctx.lineTo(pos, numP * cfg.patchSize * scale);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(0, pos);
+        ctx.lineTo(numP * cfg.patchSize * scale, pos);
+        ctx.stroke();
+      }
+
+      const info = document.createElement('p');
+      info.innerHTML = `패치 수: <strong>${realTotalP}개</strong> (${realNumP}×${realNumP})<br>
+시퀀스 길이: <strong>${realTotalP + 1}</strong> (CLS 포함)<br>
+Attention 연산량: O(${realTotalP + 1}²) = <strong>${((realTotalP + 1) ** 2).toLocaleString()}</strong>`;
+      side.appendChild(info);
+
+      compareContainer.appendChild(side);
+    });
+  }
+
   render();
 }

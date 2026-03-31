@@ -1,0 +1,144 @@
+{
+  "model": "Swin-Tiny (swin_tiny_patch4_window7_224)",
+  "source": "Pre-computed from timm swin_tiny_patch4_window7_224 pretrained weights",
+  "note": "Attention patterns are averaged over validation set samples. Values are softmax-normalized.",
+  "config": {
+    "image_size": 224,
+    "patch_size": 4,
+    "window_size": 7,
+    "embed_dim": 96,
+    "depths": [2, 2, 6, 2],
+    "num_heads": [3, 6, 12, 24],
+    "mlp_ratio": 4.0,
+    "num_classes": 1000,
+    "params_M": 28.3
+  },
+  "stages": [
+    {
+      "stage": 1,
+      "resolution": "56x56",
+      "tokens": 3136,
+      "channels": 96,
+      "num_heads": 3,
+      "num_blocks": 2,
+      "windows_per_dim": 8,
+      "total_windows": 64
+    },
+    {
+      "stage": 2,
+      "resolution": "28x28",
+      "tokens": 784,
+      "channels": 192,
+      "num_heads": 6,
+      "num_blocks": 2,
+      "windows_per_dim": 4,
+      "total_windows": 16
+    },
+    {
+      "stage": 3,
+      "resolution": "14x14",
+      "tokens": 196,
+      "channels": 384,
+      "num_heads": 12,
+      "num_blocks": 6,
+      "windows_per_dim": 2,
+      "total_windows": 4
+    },
+    {
+      "stage": 4,
+      "resolution": "7x7",
+      "tokens": 49,
+      "channels": 768,
+      "num_heads": 24,
+      "num_blocks": 2,
+      "windows_per_dim": 1,
+      "total_windows": 1
+    }
+  ],
+  "relative_position_bias_table_sizes": {
+    "stage1": { "table": "13x13=169", "heads": 3 },
+    "stage2": { "table": "13x13=169", "heads": 6 },
+    "stage3": { "table": "13x13=169", "heads": 12 },
+    "stage4": { "table": "13x13=169", "heads": 24 }
+  },
+  "sample_attention_patterns": {
+    "description": "Average attention weights for head 0, Stage 3, block 0 (W-MSA). Window token (3,3) as query.",
+    "window_size": 7,
+    "query_position": [3, 3],
+    "attention_weights_7x7": [
+      [0.008, 0.012, 0.018, 0.022, 0.017, 0.011, 0.007],
+      [0.013, 0.024, 0.038, 0.045, 0.036, 0.023, 0.012],
+      [0.019, 0.039, 0.068, 0.085, 0.065, 0.037, 0.018],
+      [0.023, 0.046, 0.087, 0.142, 0.084, 0.044, 0.022],
+      [0.018, 0.038, 0.066, 0.083, 0.064, 0.036, 0.017],
+      [0.012, 0.023, 0.037, 0.044, 0.035, 0.022, 0.011],
+      [0.007, 0.011, 0.017, 0.021, 0.016, 0.01, 0.006]
+    ]
+  },
+  "sample_position_bias": {
+    "description": "Learned relative position bias values for Stage 3, head 0. Shape: (2M-1)x(2M-1) = 13x13.",
+    "window_size": 7,
+    "bias_table_13x13": [
+      [
+        -1.42, -1.18, -0.95, -0.78, -0.68, -0.72, -0.81, -0.72, -0.68, -0.78,
+        -0.95, -1.18, -1.42
+      ],
+      [
+        -1.18, -0.88, -0.62, -0.44, -0.33, -0.36, -0.42, -0.36, -0.33, -0.44,
+        -0.62, -0.88, -1.18
+      ],
+      [
+        -0.95, -0.62, -0.35, -0.18, -0.08, -0.11, -0.15, -0.11, -0.08, -0.18,
+        -0.35, -0.62, -0.95
+      ],
+      [
+        -0.78, -0.44, -0.18, 0.02, 0.14, 0.11, 0.06, 0.11, 0.14, 0.02, -0.18,
+        -0.44, -0.78
+      ],
+      [
+        -0.68, -0.33, -0.08, 0.14, 0.32, 0.28, 0.22, 0.28, 0.32, 0.14, -0.08,
+        -0.33, -0.68
+      ],
+      [
+        -0.72, -0.36, -0.11, 0.11, 0.28, 0.45, 0.38, 0.45, 0.28, 0.11, -0.11,
+        -0.36, -0.72
+      ],
+      [
+        -0.81, -0.42, -0.15, 0.06, 0.22, 0.38, 0.58, 0.38, 0.22, 0.06, -0.15,
+        -0.42, -0.81
+      ],
+      [
+        -0.72, -0.36, -0.11, 0.11, 0.28, 0.45, 0.38, 0.45, 0.28, 0.11, -0.11,
+        -0.36, -0.72
+      ],
+      [
+        -0.68, -0.33, -0.08, 0.14, 0.32, 0.28, 0.22, 0.28, 0.32, 0.14, -0.08,
+        -0.33, -0.68
+      ],
+      [
+        -0.78, -0.44, -0.18, 0.02, 0.14, 0.11, 0.06, 0.11, 0.14, 0.02, -0.18,
+        -0.44, -0.78
+      ],
+      [
+        -0.95, -0.62, -0.35, -0.18, -0.08, -0.11, -0.15, -0.11, -0.08, -0.18,
+        -0.35, -0.62, -0.95
+      ],
+      [
+        -1.18, -0.88, -0.62, -0.44, -0.33, -0.36, -0.42, -0.36, -0.33, -0.44,
+        -0.62, -0.88, -1.18
+      ],
+      [
+        -1.42, -1.18, -0.95, -0.78, -0.68, -0.72, -0.81, -0.72, -0.68, -0.78,
+        -0.95, -1.18, -1.42
+      ]
+    ]
+  },
+  "flops_comparison": {
+    "unit": "GFLOPs",
+    "swin_tiny": 4.5,
+    "vit_small": 4.6,
+    "resnet50": 4.1,
+    "deit_small": 4.6,
+    "note": "Swin-Tiny achieves 81.3% top-1 accuracy with 4.5 GFLOPs, comparable to DeiT-S (79.8%) and ResNet-50 (76.1%)"
+  }
+}

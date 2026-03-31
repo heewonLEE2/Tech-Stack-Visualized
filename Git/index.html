@@ -1,0 +1,667 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Git & GitHub 시각화</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"
+    />
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"
+    ></script>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/animations.css" />
+  </head>
+  <body>
+    <!-- 사이드바 네비게이션 -->
+    <nav id="sidebar">
+      <div class="sidebar-header">
+        <h2>Git &amp; GitHub</h2>
+        <p class="sidebar-subtitle">Version Control System</p>
+      </div>
+      <ul class="nav-list">
+        <li>
+          <a
+            href="#section-overview"
+            class="nav-link active"
+            data-section="section-overview"
+          >
+            <span class="nav-icon">◈</span> 전체 워크플로우
+            <span class="nav-check" data-progress="section-overview"></span>
+          </a>
+        </li>
+        <li>
+          <a
+            href="#section-objects"
+            class="nav-link"
+            data-section="section-objects"
+          >
+            <span class="nav-icon">⬡</span> Git 내부 구조
+            <span class="nav-check" data-progress="section-objects"></span>
+          </a>
+        </li>
+        <li>
+          <a
+            href="#section-branching"
+            class="nav-link"
+            data-section="section-branching"
+          >
+            <span class="nav-icon">⑂</span> 브랜치
+            <span class="nav-check" data-progress="section-branching"></span>
+          </a>
+        </li>
+        <li>
+          <a
+            href="#section-merge"
+            class="nav-link"
+            data-section="section-merge"
+          >
+            <span class="nav-icon">⊕</span> Merge &amp; Rebase
+            <span class="nav-check" data-progress="section-merge"></span>
+          </a>
+        </li>
+        <li>
+          <a
+            href="#section-remote"
+            class="nav-link"
+            data-section="section-remote"
+          >
+            <span class="nav-icon">☁</span> 원격 저장소
+            <span class="nav-check" data-progress="section-remote"></span>
+          </a>
+        </li>
+        <li>
+          <a
+            href="#section-github-flow"
+            class="nav-link"
+            data-section="section-github-flow"
+          >
+            <span class="nav-icon">⟳</span> GitHub 워크플로우
+            <span class="nav-check" data-progress="section-github-flow"></span>
+          </a>
+        </li>
+        <li>
+          <a
+            href="#section-advanced"
+            class="nav-link"
+            data-section="section-advanced"
+          >
+            <span class="nav-icon">⚙</span> 고급 명령어
+            <span class="nav-check" data-progress="section-advanced"></span>
+          </a>
+        </li>
+        <li>
+          <a
+            href="#section-playground"
+            class="nav-link"
+            data-section="section-playground"
+          >
+            <span class="nav-icon">▷</span> 실전 시뮬레이터
+            <span class="nav-check" data-progress="section-playground"></span>
+          </a>
+        </li>
+      </ul>
+      <div class="sidebar-footer">
+        <button id="theme-toggle" class="theme-btn" title="테마 전환">
+          <span class="theme-icon">☀</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- 모바일 메뉴 버튼 -->
+    <button id="mobile-menu-btn" class="mobile-menu-btn" aria-label="메뉴 열기">
+      ☰
+    </button>
+
+    <!-- 메인 콘텐츠 -->
+    <main id="main-content">
+      <!-- 1. 전체 워크플로우 Overview -->
+      <section id="section-overview" class="section">
+        <div class="section-inner">
+          <h1 class="section-title">Git 전체 워크플로우</h1>
+          <p class="section-desc">
+            <span data-term="git">Git</span>의 핵심 영역인
+            <span data-term="working-directory">Working Directory</span> →
+            <span data-term="staging-area">Staging Area</span> →
+            <span data-term="local-repo">Local Repository</span> →
+            <span data-term="remote-repo">Remote Repository</span>
+            전체 데이터 흐름입니다. 각 블록을 클릭하면 해당 섹션으로 이동합니다.
+          </p>
+          <details class="why-panel">
+            <summary>💡 왜 버전 관리인가?</summary>
+            <div class="why-content">
+              <p>
+                <strong>이전으로 되돌리기:</strong> 코드의 모든 변경 이력을
+                저장하여, 문제가 발생하면 언제든 이전 상태로
+                <em>안전하게 복원</em>할 수 있습니다.
+              </p>
+              <p>
+                <strong>동시 협업:</strong> 여러 개발자가 같은 코드베이스에서
+                독립적으로 작업한 뒤 <em>충돌 없이 병합</em>할 수 있습니다.
+              </p>
+              <p>
+                <strong>분산형 아키텍처:</strong> Git은 중앙 서버 없이도 각
+                개발자가 전체 히스토리를 가지므로, 오프라인에서도
+                커밋·브랜치·머지가 가능합니다.
+              </p>
+            </div>
+          </details>
+          <div id="overview-container" class="viz-container"></div>
+        </div>
+      </section>
+
+      <!-- 2. Git 내부 구조 -->
+      <section id="section-objects" class="section">
+        <div class="section-inner">
+          <h1 class="section-title">Git 내부 객체 구조</h1>
+          <p class="section-desc">
+            Git은 내부적으로 4가지 핵심 객체를 사용합니다:
+            <span data-term="blob">Blob</span>(파일 내용),
+            <span data-term="tree">Tree</span>(디렉토리 구조),
+            <span data-term="commit">Commit</span>(스냅샷),
+            <span data-term="tag">Tag</span>(태그). 모든 객체는
+            <span data-term="sha1">SHA-1</span> 해시로 식별됩니다.
+          </p>
+          <details class="why-panel">
+            <summary>💡 왜 해시 기반 저장인가?</summary>
+            <div class="why-content">
+              <p>
+                <strong>무결성 보장:</strong> 내용이 1비트라도 바뀌면 해시가
+                완전히 달라지므로, <em>데이터 손상을 즉시 감지</em>합니다.
+              </p>
+              <p>
+                <strong>효율적 중복 제거:</strong> 동일 내용의 파일은 같은
+                해시를 가지므로, 하나의 blob만 저장하여
+                <em>저장 공간을 절약</em>합니다.
+              </p>
+              <p>
+                <strong>불변 데이터:</strong> 한 번 생성된 객체는 변경되지 않아
+                히스토리의 <em>신뢰성</em>이 보장됩니다.
+              </p>
+            </div>
+          </details>
+          <div class="control-row">
+            <span class="control-label">SHA-1 해시 데모:</span>
+            <input
+              type="text"
+              id="hash-input"
+              class="text-input"
+              placeholder="텍스트를 입력하세요..."
+              value="hello"
+            />
+            <span id="hash-output" class="hash-display">—</span>
+          </div>
+          <div class="control-row">
+            <span class="control-label">탐색할 객체:</span>
+            <button class="btn preset-btn active" data-obj-type="blob">
+              Blob
+            </button>
+            <button class="btn preset-btn" data-obj-type="tree">Tree</button>
+            <button class="btn preset-btn" data-obj-type="commit">
+              Commit
+            </button>
+            <button class="btn preset-btn" data-obj-type="tag">Tag</button>
+          </div>
+          <div id="objects-container" class="viz-container"></div>
+          <details class="code-panel">
+            <summary>💻 Git 명령어</summary>
+            <pre class="code-block"><code id="objects-code"># 객체 내용 확인
+git cat-file -p &lt;sha&gt;
+
+# 객체 타입 확인
+git cat-file -t &lt;sha&gt;
+
+# 파일로부터 해시 생성
+echo "hello" | git hash-object --stdin</code></pre>
+          </details>
+        </div>
+      </section>
+
+      <!-- 3. 브랜치 -->
+      <section id="section-branching" class="section">
+        <div class="section-inner">
+          <h1 class="section-title">브랜치 (Branch)</h1>
+          <p class="section-desc">
+            <span data-term="branch">브랜치</span>는 특정
+            <span data-term="commit">커밋</span>을 가리키는 가벼운 포인터입니다.
+            <span data-term="head">HEAD</span>는 현재 작업 중인 브랜치를
+            가리킵니다. 브랜치를 만들고 전환하며 커밋 그래프가 어떻게 변화하는지
+            확인해 보세요.
+          </p>
+          <details class="why-panel">
+            <summary>💡 왜 브랜치인가?</summary>
+            <div class="why-content">
+              <p>
+                <strong>독립적 작업 공간:</strong> 새 기능 개발, 버그 수정을
+                <em>메인 코드에 영향 주지 않고</em> 독립적으로 진행합니다.
+              </p>
+              <p>
+                <strong>가벼운 구현:</strong> Git 브랜치는 40자리 해시 하나만
+                저장하는 파일이라 생성 비용이 거의 없어
+                <em>자유롭게 만들고 삭제</em>할 수 있습니다.
+              </p>
+              <p>
+                <strong>병렬 실험:</strong> 여러 접근법을 동시에 시도한 후
+                최적의 결과만 병합할 수 있습니다.
+              </p>
+            </div>
+          </details>
+          <div class="control-row">
+            <button id="branch-add-commit" class="btn btn-primary">
+              + 커밋 추가
+            </button>
+            <button id="branch-create" class="btn">⑂ 브랜치 생성</button>
+            <button id="branch-switch" class="btn">↔ 브랜치 전환</button>
+            <button id="branch-reset" class="btn">↻ 초기화</button>
+          </div>
+          <div class="control-row">
+            <label
+              >속도:
+              <input
+                type="range"
+                id="branch-speed"
+                min="0.5"
+                max="3"
+                step="0.5"
+                value="1"
+                class="slider"
+              />
+              <span id="branch-speed-val">1x</span>
+            </label>
+          </div>
+          <div id="branching-container" class="viz-container"></div>
+          <details class="code-panel">
+            <summary>💻 Git 명령어</summary>
+            <pre class="code-block"><code id="branching-code"># 브랜치 목록 확인
+git branch
+
+# 새 브랜치 생성
+git branch feature/login
+
+# 브랜치 전환
+git switch feature/login   # 또는 git checkout feature/login
+
+# 생성과 동시에 전환
+git switch -c feature/login
+
+# 브랜치 삭제
+git branch -d feature/login</code></pre>
+          </details>
+        </div>
+      </section>
+
+      <!-- 4. Merge & Rebase -->
+      <section id="section-merge" class="section">
+        <div class="section-inner">
+          <h1 class="section-title">Merge &amp; Rebase</h1>
+          <p class="section-desc">
+            두 브랜치를 합치는 방법: <span data-term="merge">Merge</span>는
+            히스토리를 보존하고, <span data-term="rebase">Rebase</span>는
+            히스토리를 깔끔하게 정리합니다.
+            <span data-term="fast-forward">Fast-forward</span>와
+            <span data-term="three-way-merge">3-way merge</span>의 차이를 비교해
+            보세요.
+          </p>
+          <details class="why-panel">
+            <summary>💡 Merge vs Rebase, 언제 쓰나?</summary>
+            <div class="why-content">
+              <p>
+                <strong>Merge:</strong> 공유 브랜치(main)에서는 히스토리 보존이
+                중요하므로 merge를 사용합니다. <em>협업 시 안전</em>합니다.
+              </p>
+              <p>
+                <strong>Rebase:</strong> 개인 브랜치에서는 rebase로 히스토리를
+                깔끔하게 만든 뒤 merge합니다. 단, 이미 push한 커밋은
+                <em>rebase하면 안 됩니다</em>.
+              </p>
+              <p>
+                <strong>Fast-forward:</strong> 분기가 없으면 merge commit 없이
+                포인터만 이동합니다. <code>--no-ff</code>로 강제 merge commit을
+                만들 수 있습니다.
+              </p>
+            </div>
+          </details>
+          <div class="control-row">
+            <span class="control-label">모드:</span>
+            <button class="btn preset-btn active" data-merge-mode="ff">
+              Fast-forward
+            </button>
+            <button class="btn preset-btn" data-merge-mode="3way">
+              3-way Merge
+            </button>
+            <button class="btn preset-btn" data-merge-mode="rebase">
+              Rebase
+            </button>
+          </div>
+          <div class="control-row">
+            <button id="merge-play" class="btn btn-primary">▶ 재생</button>
+            <button id="merge-step" class="btn">▶ 다음 단계</button>
+            <button id="merge-reset" class="btn">↻ 초기화</button>
+            <label
+              >속도:
+              <input
+                type="range"
+                id="merge-speed"
+                min="0.5"
+                max="3"
+                step="0.5"
+                value="1"
+                class="slider"
+              />
+              <span id="merge-speed-val">1x</span>
+            </label>
+          </div>
+          <div class="compare-toggle-row">
+            <button id="merge-compare-btn" class="btn btn-compare">
+              ⚖ 비교 모드: Merge vs Rebase
+            </button>
+          </div>
+          <div id="merge-container" class="viz-container"></div>
+          <div
+            id="merge-compare-container"
+            class="compare-container"
+            style="display: none"
+          ></div>
+          <details class="code-panel">
+            <summary>💻 Git 명령어</summary>
+            <pre class="code-block"><code id="merge-code"># Fast-forward merge
+git merge feature/login
+
+# Merge commit 강제 생성
+git merge --no-ff feature/login
+
+# Rebase (현재 브랜치를 main 위로 재배치)
+git rebase main
+
+# 충돌 해결 후 계속
+git rebase --continue
+
+# Rebase 취소
+git rebase --abort</code></pre>
+          </details>
+        </div>
+      </section>
+
+      <!-- 5. 원격 저장소 -->
+      <section id="section-remote" class="section">
+        <div class="section-inner">
+          <h1 class="section-title">원격 저장소 (Remote)</h1>
+          <p class="section-desc">
+            <span data-term="remote">원격 저장소</span>는 네트워크를 통해
+            접근하는 공유 <span data-term="repository">저장소</span>입니다.
+            <span data-term="clone">clone</span>,
+            <span data-term="fetch">fetch</span>,
+            <span data-term="pull">pull</span>,
+            <span data-term="push">push</span> 명령으로 로컬과 원격을
+            동기화합니다.
+          </p>
+          <details class="why-panel">
+            <summary>💡 왜 원격 저장소인가?</summary>
+            <div class="why-content">
+              <p>
+                <strong>백업:</strong> 로컬 코드의 <em>안전한 사본</em>을 원격에
+                보관합니다.
+              </p>
+              <p>
+                <strong>협업 허브:</strong> 팀원들이 같은 원격 저장소를 공유하여
+                <em>코드 리뷰, PR, 이슈 관리</em>를 체계적으로 수행합니다.
+              </p>
+              <p>
+                <strong>fetch vs pull:</strong> fetch는 원격 변경을
+                <em>다운로드만</em> 하고, pull은 다운로드 +
+                <em>현재 브랜치에 병합</em>까지 수행합니다.
+              </p>
+            </div>
+          </details>
+          <div class="control-row">
+            <button id="remote-clone" class="btn">📥 clone</button>
+            <button id="remote-fetch" class="btn">↓ fetch</button>
+            <button id="remote-pull" class="btn btn-primary">⤓ pull</button>
+            <button id="remote-push" class="btn btn-primary">⤒ push</button>
+            <button id="remote-reset" class="btn">↻ 초기화</button>
+          </div>
+          <div id="remote-container" class="viz-container"></div>
+          <details class="code-panel">
+            <summary>💻 Git 명령어</summary>
+            <pre class="code-block"><code id="remote-code"># 원격 저장소 복제
+git clone https://github.com/user/repo.git
+
+# 원격 추가
+git remote add origin https://github.com/user/repo.git
+
+# 원격 변경사항 다운로드 (병합 X)
+git fetch origin
+
+# 원격 변경사항 다운로드 + 병합
+git pull origin main
+
+# 로컬 변경사항 업로드
+git push origin main
+
+# 원격 브랜치 목록
+git branch -r</code></pre>
+          </details>
+        </div>
+      </section>
+
+      <!-- 6. GitHub 워크플로우 -->
+      <section id="section-github-flow" class="section">
+        <div class="section-inner">
+          <h1 class="section-title">GitHub 워크플로우</h1>
+          <p class="section-desc">
+            <span data-term="github">GitHub</span>의 표준 협업 사이클:
+            <span data-term="fork">Fork</span> → Branch → Commit →
+            <span data-term="pull-request">Pull Request</span> → Code Review →
+            Merge. 오픈소스 기여와 팀 협업의 핵심 패턴입니다.
+          </p>
+          <details class="why-panel">
+            <summary>💡 왜 GitHub Flow인가?</summary>
+            <div class="why-content">
+              <p>
+                <strong>코드 품질:</strong> PR을 통한 <em>코드 리뷰</em>로
+                버그를 조기에 발견하고 코드 품질을 유지합니다.
+              </p>
+              <p>
+                <strong>문서화된 변경:</strong> 모든 변경에 설명, 토론, 승인
+                기록이 남아 <em>왜 이 코드가 추가되었는지</em> 추적 가능합니다.
+              </p>
+              <p>
+                <strong>CI/CD 연동:</strong> PR 생성 시 자동 테스트·빌드가
+                실행되어 <em>안전한 배포</em>를 보장합니다.
+              </p>
+            </div>
+          </details>
+          <div class="control-row">
+            <button id="ghflow-play" class="btn btn-primary">▶ 재생</button>
+            <button id="ghflow-step" class="btn">▶ 다음 단계</button>
+            <button id="ghflow-reset" class="btn">↻ 초기화</button>
+            <label
+              >속도:
+              <input
+                type="range"
+                id="ghflow-speed"
+                min="0.5"
+                max="3"
+                step="0.5"
+                value="1"
+                class="slider"
+              />
+              <span id="ghflow-speed-val">1x</span>
+            </label>
+          </div>
+          <div id="github-flow-container" class="viz-container"></div>
+          <details class="code-panel">
+            <summary>💻 GitHub CLI 명령어</summary>
+            <pre
+              class="code-block"
+            ><code id="ghflow-code"># Fork (GitHub 웹 또는 CLI)
+gh repo fork owner/repo
+
+# 브랜치 생성 후 작업
+git switch -c feature/new-feature
+
+# 변경 사항 커밋
+git add .
+git commit -m "feat: add new feature"
+
+# Push 후 PR 생성
+git push origin feature/new-feature
+gh pr create --title "Add new feature" --body "설명..."
+
+# PR 머지 (리뷰 승인 후)
+gh pr merge 42</code></pre>
+          </details>
+        </div>
+      </section>
+
+      <!-- 7. 고급 명령어 -->
+      <section id="section-advanced" class="section">
+        <div class="section-inner">
+          <h1 class="section-title">고급 명령어</h1>
+          <p class="section-desc">
+            <span data-term="reset">reset</span>의 3가지 모드(soft, mixed,
+            hard), <span data-term="revert">revert</span>,
+            <span data-term="cherry-pick">cherry-pick</span>,
+            <span data-term="stash">stash</span>,
+            <span data-term="reflog">reflog</span>의 동작 원리를 시각적으로
+            비교합니다.
+          </p>
+          <details class="why-panel">
+            <summary>💡 reset vs revert, 언제 쓰나?</summary>
+            <div class="why-content">
+              <p>
+                <strong>reset:</strong> 히스토리를 <em>되감아서</em> 커밋을
+                제거합니다. 개인 브랜치에서만 사용해야 합니다 (push 전).
+              </p>
+              <p>
+                <strong>revert:</strong> 이전 커밋을 <em>취소하는 새 커밋</em>을
+                만듭니다. 공유 브랜치에서 안전하게 변경을 되돌릴 때 사용합니다.
+              </p>
+              <p>
+                <strong>cherry-pick:</strong> 다른 브랜치의 특정 커밋 하나만
+                <em>골라서 적용</em>할 때 사용합니다.
+              </p>
+            </div>
+          </details>
+          <div class="control-row">
+            <span class="control-label">명령어:</span>
+            <button class="btn preset-btn active" data-adv-mode="reset">
+              reset
+            </button>
+            <button class="btn preset-btn" data-adv-mode="revert">
+              revert
+            </button>
+            <button class="btn preset-btn" data-adv-mode="cherry-pick">
+              cherry-pick
+            </button>
+            <button class="btn preset-btn" data-adv-mode="stash">stash</button>
+          </div>
+          <div id="reset-mode-row" class="control-row">
+            <span class="control-label">reset 모드:</span>
+            <button class="btn preset-btn active" data-reset-mode="soft">
+              --soft
+            </button>
+            <button class="btn preset-btn" data-reset-mode="mixed">
+              --mixed
+            </button>
+            <button class="btn preset-btn" data-reset-mode="hard">
+              --hard
+            </button>
+          </div>
+          <div class="control-row">
+            <button id="adv-play" class="btn btn-primary">▶ 재생</button>
+            <button id="adv-step" class="btn">▶ 다음 단계</button>
+            <button id="adv-reset" class="btn">↻ 초기화</button>
+          </div>
+          <div id="advanced-container" class="viz-container"></div>
+          <details class="code-panel">
+            <summary>💻 Git 명령어</summary>
+            <pre
+              class="code-block"
+            ><code id="advanced-code"># reset (3가지 모드)
+git reset --soft HEAD~1   # 커밋만 취소, 변경사항 staged 유지
+git reset --mixed HEAD~1  # 커밋 취소 + unstage, 파일은 유지
+git reset --hard HEAD~1   # 커밋 취소 + 변경사항 완전 삭제
+
+# revert (안전한 취소)
+git revert HEAD           # 마지막 커밋을 취소하는 새 커밋 생성
+
+# cherry-pick (특정 커밋 가져오기)
+git cherry-pick abc1234
+
+# stash (임시 저장)
+git stash                 # 변경사항 임시 저장
+git stash pop             # 가장 최근 stash 복원
+git stash list            # stash 목록 확인
+
+# reflog (복구용 히스토리)
+git reflog                # HEAD 이동 히스토리 확인</code></pre>
+          </details>
+        </div>
+      </section>
+
+      <!-- 8. 실전 시뮬레이터 -->
+      <section id="section-playground" class="section">
+        <div class="section-inner">
+          <h1 class="section-title">Git 실전 시뮬레이터</h1>
+          <p class="section-desc">
+            Git 명령어를 직접 입력하면 커밋 그래프가 실시간으로 변화합니다. 아래
+            명령어를 사용해 브랜치 생성, 커밋, 병합을 연습해 보세요.
+          </p>
+          <details class="why-panel">
+            <summary>💡 사용 가능한 명령어</summary>
+            <div class="why-content">
+              <p><code>git commit -m "메시지"</code> — 새 커밋 생성</p>
+              <p><code>git branch 이름</code> — 새 브랜치 생성</p>
+              <p><code>git switch 이름</code> — 브랜치 전환</p>
+              <p><code>git merge 이름</code> — 브랜치 병합</p>
+              <p><code>git rebase 이름</code> — 리베이스</p>
+              <p><code>git reset --soft/--mixed/--hard HEAD~N</code> — 리셋</p>
+              <p><code>git revert HEAD</code> — 마지막 커밋 되돌리기</p>
+              <p>
+                <code>git stash</code> / <code>git stash pop</code> — 임시 저장
+              </p>
+            </div>
+          </details>
+          <div class="control-row playground-input-row">
+            <span class="playground-prompt">$</span>
+            <input
+              type="text"
+              id="playground-input"
+              class="text-input playground-text-input"
+              placeholder='git commit -m "initial commit"'
+            />
+            <button id="playground-run" class="btn btn-primary">실행</button>
+            <button id="playground-reset" class="btn">↻ 초기화</button>
+          </div>
+          <div id="playground-log" class="playground-log"></div>
+          <div id="playground-container" class="viz-container"></div>
+          <div class="control-row" style="margin-top: 12px">
+            <span class="control-label">미션:</span>
+            <button class="btn preset-btn" data-mission="merge">
+              Merge 시나리오
+            </button>
+            <button class="btn preset-btn" data-mission="rebase">
+              Rebase 시나리오
+            </button>
+            <button class="btn preset-btn" data-mission="cherry-pick">
+              Cherry-pick 시나리오
+            </button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- 글로벌 툴팁 -->
+    <div id="tooltip" class="tooltip" style="display: none"></div>
+
+    <script type="module" src="js/main.js"></script>
+  </body>
+</html>

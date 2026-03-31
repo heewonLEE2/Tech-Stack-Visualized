@@ -8,6 +8,14 @@
       href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap"
       rel="stylesheet"
     />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"
+    />
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"
+    ></script>
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/animations.css" />
   </head>
@@ -26,6 +34,7 @@
             data-section="section-overview"
           >
             <span class="nav-icon">◈</span> 전체 아키텍처
+            <span class="nav-check" data-progress="section-overview"></span>
           </a>
         </li>
         <li>
@@ -35,6 +44,7 @@
             data-section="section-patch"
           >
             <span class="nav-icon">▦</span> 이미지 패치 분할
+            <span class="nav-check" data-progress="section-patch"></span>
           </a>
         </li>
         <li>
@@ -44,6 +54,7 @@
             data-section="section-patch-embed"
           >
             <span class="nav-icon">⊠</span> 패치 임베딩
+            <span class="nav-check" data-progress="section-patch-embed"></span>
           </a>
         </li>
         <li>
@@ -53,6 +64,7 @@
             data-section="section-pos-embed"
           >
             <span class="nav-icon">∿</span> 위치 임베딩
+            <span class="nav-check" data-progress="section-pos-embed"></span>
           </a>
         </li>
         <li>
@@ -62,6 +74,7 @@
             data-section="section-cls-token"
           >
             <span class="nav-icon">★</span> CLS 토큰
+            <span class="nav-check" data-progress="section-cls-token"></span>
           </a>
         </li>
         <li>
@@ -71,6 +84,7 @@
             data-section="section-encoder"
           >
             <span class="nav-icon">⊞</span> Transformer 인코더
+            <span class="nav-check" data-progress="section-encoder"></span>
           </a>
         </li>
         <li>
@@ -80,6 +94,7 @@
             data-section="section-attention"
           >
             <span class="nav-icon">⊗</span> Self-Attention 시각화
+            <span class="nav-check" data-progress="section-attention"></span>
           </a>
         </li>
         <li>
@@ -89,6 +104,7 @@
             data-section="section-mlp-head"
           >
             <span class="nav-icon">◎</span> 분류 헤드 (MLP Head)
+            <span class="nav-check" data-progress="section-mlp-head"></span>
           </a>
         </li>
         <li>
@@ -98,6 +114,7 @@
             data-section="section-playground"
           >
             <span class="nav-icon">⚡</span> 실전 파이프라인
+            <span class="nav-check" data-progress="section-playground"></span>
           </a>
         </li>
       </ul>
@@ -120,9 +137,48 @@
         <div class="section-inner">
           <h1 class="section-title">전체 아키텍처</h1>
           <p class="section-desc">
-            Vision Transformer(ViT)는 이미지를 패치로 분할한 후, Transformer
-            인코더를 적용하여 분류하는 모델입니다.
+            <span data-term="vit">Vision Transformer(ViT)</span>는 이미지를
+            <span data-term="patch">패치</span>로 분할한 후,
+            <span data-term="transformer">Transformer</span>
+            <span data-term="encoder">인코더</span>를 적용하여 분류하는
+            모델입니다.
           </p>
+
+          <details class="why-panel">
+            <summary>💡 왜 Vision Transformer인가?</summary>
+            <div class="why-content">
+              <p>
+                <strong>CNN의 한계:</strong>
+                <span data-term="inductive-bias">귀납적 편향</span>(locality,
+                translation equivariance)이 내장되어 있어 적은 데이터에선
+                유리하지만, 수용야(receptive field)가 제한적입니다. 먼 영역 간
+                관계를 파악하려면 많은 층을 쌓아야 합니다.
+              </p>
+              <p>
+                <strong>ViT의 접근:</strong>
+                <span data-term="self-attention">Self-Attention</span>으로 모든
+                패치 간 관계를 <em>한 번에</em> 직접 모델링합니다. 대규모
+                데이터(JFT-300M 등)에서 사전학습하면 CNN을 능가하는 성능을
+                달성합니다.
+              </p>
+            </div>
+          </details>
+
+          <details class="code-panel">
+            <summary>🐍 PyTorch 코드</summary>
+            <pre class="code-block"><code id="overview-code">import timm
+
+# ViT-Base/16: 패치 16×16, 12레이어, 12헤드, d=768
+model = timm.create_model(
+    'vit_base_patch16_224',
+    pretrained=True,
+    num_classes=1000
+)
+# 입력: [batch, 3, 224, 224]
+# 출력: [batch, 1000]
+output = model(images)</code></pre>
+          </details>
+
           <div id="overview-container" class="viz-container">
             <canvas id="overview-canvas" width="1000" height="500"></canvas>
           </div>
@@ -138,15 +194,16 @@
               <h3>vs CNN</h3>
               <p>
                 CNN은 지역적 특징을 계층적으로 추출하지만, ViT는
-                Self-Attention으로 모든 패치 간 전역적 관계를 한 번에
-                파악합니다.
+                <span data-term="self-attention">Self-Attention</span>으로 모든
+                패치 간 전역적 관계를 한 번에 파악합니다.
               </p>
             </div>
             <div class="info-card">
               <h3>주요 설정</h3>
               <p>
                 ViT-Base: 패치 16×16, 12 레이어, 12 헤드, d=768<br />
-                입력: 224×224 이미지 → 196개 패치 + 1 CLS 토큰
+                입력: 224×224 이미지 → 196개 패치 + 1
+                <span data-term="cls-token">CLS 토큰</span>
               </p>
             </div>
           </div>
@@ -158,9 +215,46 @@
         <div class="section-inner">
           <h1 class="section-title">이미지 패치 분할</h1>
           <p class="section-desc">
-            입력 이미지를 P×P 크기의 고정 패치로 분할합니다. 224×224 이미지를
+            입력 이미지를 P×P 크기의 고정
+            <span data-term="patch">패치</span>로 분할합니다. 224×224 이미지를
             16×16 패치로 나누면 14×14 = 196개의 패치가 생성됩니다.
+            <br />
+            <span id="patch-formula" class="katex-formula"></span>
           </p>
+
+          <details class="why-panel">
+            <summary>💡 왜 패치로 나누는가?</summary>
+            <div class="why-content">
+              <p>
+                <strong>픽셀 단위의 한계:</strong> 224×224 이미지는 50,176개
+                픽셀입니다.
+                <span data-term="self-attention">Self-Attention</span>의
+                연산량은 시퀀스 길이의 제곱(O(n²))이므로, 픽셀 단위로 처리하면
+                계산이 불가능합니다.
+              </p>
+              <p>
+                <strong>패치 → 토큰:</strong> 16×16 패치로 나누면 시퀀스 길이가
+                196으로 줄어 Transformer에 실용적으로 입력할 수 있습니다. 각
+                패치는 NLP에서의 단어 토큰에 해당합니다.
+              </p>
+            </div>
+          </details>
+
+          <details class="code-panel">
+            <summary>🐍 PyTorch 코드</summary>
+            <pre class="code-block"><code id="patch-code">import torch.nn as nn
+
+P = 16  # 패치 크기
+# Conv2d를 패치 추출기로 사용 (stride=P)
+patch_embed = nn.Conv2d(
+    in_channels=3, out_channels=768,
+    kernel_size=P, stride=P
+)
+# 입력: [1, 3, 224, 224]
+# 출력: [1, 768, 14, 14] → flatten → [1, 196, 768]
+patches = patch_embed(image).flatten(2).transpose(1, 2)</code></pre>
+          </details>
+
           <div class="control-row">
             <label
               >패치 크기 (P):
@@ -172,6 +266,18 @@
               </select>
             </label>
           </div>
+
+          <div class="compare-toggle">
+            <button id="patch-compare-btn" class="btn">
+              ⚖ 패치 크기 비교 (4×4 vs 16×16)
+            </button>
+          </div>
+          <div
+            id="patch-compare"
+            class="compare-container"
+            style="display: none"
+          ></div>
+
           <div class="viz-row">
             <div class="viz-container viz-half">
               <h3>원본 이미지</h3>
@@ -190,7 +296,9 @@
             </div>
           </div>
           <div class="viz-container">
-            <h3>패치 → 1D 시퀀스 변환 (Flatten)</h3>
+            <h3>
+              패치 → 1D 시퀀스 변환 (<span data-term="flatten">Flatten</span>)
+            </h3>
             <div id="patch-flatten-viz"></div>
           </div>
         </div>
@@ -199,14 +307,54 @@
       <!-- 3. 패치 임베딩 -->
       <section id="section-patch-embed" class="section">
         <div class="section-inner">
-          <h1 class="section-title">패치 임베딩 (Linear Projection)</h1>
+          <h1 class="section-title">
+            패치 임베딩 (<span data-term="linear-projection"
+              >Linear Projection</span
+            >)
+          </h1>
           <p class="section-desc">
-            각 패치를 1D 벡터로 펼친 후 학습 가능한 선형 레이어(E)를 통해 D차원
-            임베딩으로 변환합니다.
-            <span class="formula"
-              >z = x<sub>p</sub> · E, E ∈ ℝ<sup>(P²·C) × D</sup></span
-            >
+            각 <span data-term="patch">패치</span>를 1D 벡터로 펼친 후 학습
+            가능한 선형 레이어(E)를 통해 D차원
+            <span data-term="embedding">임베딩</span>으로 변환합니다.
+            <br />
+            <span id="embed-formula" class="katex-formula"></span>
           </p>
+
+          <details class="why-panel">
+            <summary>💡 왜 선형 투영인가?</summary>
+            <div class="why-content">
+              <p>
+                <strong>차원 맞춤:</strong> 원시 패치 픽셀(P²×C = 768차원)을
+                Transformer가 처리할 수 있는 모델 차원 D로 투영합니다. 이는
+                NLP에서 단어를 임베딩 벡터로 변환하는 것과 동일한 역할입니다.
+              </p>
+              <p>
+                <strong>CNN 특징추출 대체:</strong> CNN은 여러 층의 합성곱으로
+                특징을 추출하지만, ViT는 단일 선형 변환으로 패치를 표현 공간에
+                사상합니다. 단순하지만 대규모 데이터에서 효과적입니다.
+              </p>
+            </div>
+          </details>
+
+          <details class="code-panel">
+            <summary>🐍 PyTorch 코드</summary>
+            <pre
+              class="code-block"
+            ><code id="patch-embed-code">import torch.nn as nn
+
+P = 16   # 패치 크기
+C = 3    # 채널 수 (RGB)
+D = 768  # 임베딩 차원
+
+# 방법 1: Linear Projection
+proj = nn.Linear(P * P * C, D)
+# [batch, N, P²·C] → [batch, N, D]
+
+# 방법 2: Conv2d (동등하지만 더 효율적)
+proj = nn.Conv2d(C, D, kernel_size=P, stride=P)
+# [batch, 3, 224, 224] → [batch, D, 14, 14]</code></pre>
+          </details>
+
           <div class="viz-container">
             <h3>Flatten + Linear Projection</h3>
             <canvas id="patch-embed-canvas" width="900" height="400"></canvas>
@@ -233,15 +381,50 @@
       <!-- 4. 위치 임베딩 -->
       <section id="section-pos-embed" class="section">
         <div class="section-inner">
-          <h1 class="section-title">위치 임베딩 (Position Embedding)</h1>
+          <h1 class="section-title">
+            <span data-term="position-embedding">위치 임베딩</span> (Position
+            Embedding)
+          </h1>
           <p class="section-desc">
             패치의 공간적 위치 정보를 보존하기 위해 학습 가능한 위치 임베딩을
             추가합니다.
-            <span class="formula"
-              >z₀ = [x<sub>class</sub>; x¹<sub>p</sub>E; x²<sub>p</sub>E; …;
-              xᴺ<sub>p</sub>E] + E<sub>pos</sub></span
-            >
+            <br />
+            <span id="pos-embed-formula" class="katex-formula"></span>
           </p>
+
+          <details class="why-panel">
+            <summary>💡 왜 위치 임베딩이 필요한가?</summary>
+            <div class="why-content">
+              <p>
+                <strong>Transformer는 순서를 모릅니다:</strong>
+                <span data-term="self-attention">Self-Attention</span>은
+                집합(set) 연산이라 토큰의 순서를 구분하지 못합니다. 패치를
+                뒤섞어도 결과가 동일합니다.
+              </p>
+              <p>
+                <strong>공간 정보 주입:</strong> 위치 임베딩을 더하면 모델이 "이
+                패치는 왼쪽 위" "저 패치는 오른쪽 아래"를 알 수 있습니다. 학습
+                후 가까운 위치끼리 유사한 임베딩을 가지게 됩니다.
+              </p>
+            </div>
+          </details>
+
+          <details class="code-panel">
+            <summary>🐍 PyTorch 코드</summary>
+            <pre class="code-block"><code id="pos-embed-code">import torch
+import torch.nn as nn
+
+N = 196  # 패치 수 (14×14)
+D = 768  # 임베딩 차원
+
+# 학습 가능한 위치 임베딩 (CLS 포함 → N+1)
+pos_embed = nn.Parameter(
+    torch.randn(1, N + 1, D) * 0.02
+)
+# 패치 임베딩 + 위치 임베딩
+z_0 = patch_embeddings + pos_embed</code></pre>
+          </details>
+
           <div class="viz-row">
             <div class="viz-container viz-half">
               <h3>위치 임베딩 히트맵</h3>
@@ -260,9 +443,9 @@
             <div class="info-card">
               <h3>학습 가능 임베딩</h3>
               <p>
-                Transformer와 달리 ViT는 고정된 Sin/Cos 대신 학습
-                가능한(Learnable) 위치 임베딩을 사용합니다. 학습 후 가까운
-                패치끼리 유사한 패턴을 보입니다.
+                <span data-term="transformer">Transformer</span>와 달리 ViT는
+                고정된 Sin/Cos 대신 학습 가능한(Learnable) 위치 임베딩을
+                사용합니다. 학습 후 가까운 패치끼리 유사한 패턴을 보입니다.
               </p>
             </div>
             <div class="info-card">
@@ -279,11 +462,47 @@
       <!-- 5. CLS 토큰 -->
       <section id="section-cls-token" class="section">
         <div class="section-inner">
-          <h1 class="section-title">CLS 토큰</h1>
+          <h1 class="section-title">
+            <span data-term="cls-token">CLS 토큰</span>
+          </h1>
           <p class="section-desc">
             BERT에서 영감을 받아 학습 가능한 [CLS] 토큰을 패치 시퀀스 앞에
             추가합니다. 이 토큰이 이미지 전체의 표현을 학습합니다.
           </p>
+
+          <details class="why-panel">
+            <summary>💡 왜 CLS 토큰을 사용하는가?</summary>
+            <div class="why-content">
+              <p>
+                <strong>전역 대표 벡터:</strong>
+                <span data-term="self-attention">Self-Attention</span>을 거치며
+                CLS 토큰은 모든 패치의 정보를 전역적으로 집약합니다. 이
+                토큰만으로 이미지 전체를 대표할 수 있습니다.
+              </p>
+              <p>
+                <strong>대안 — Global Average Pooling:</strong> 모든 패치 출력을
+                평균하는 방법(GAP)도 가능하지만, 원 논문은 BERT의 [CLS] 방식을
+                따릅니다. 성능 차이는 미미하나, CLS 방식이 Transformer 전통에
+                일관됩니다.
+              </p>
+            </div>
+          </details>
+
+          <details class="code-panel">
+            <summary>🐍 PyTorch 코드</summary>
+            <pre class="code-block"><code id="cls-code">import torch
+import torch.nn as nn
+
+D = 768  # 임베딩 차원
+# 학습 가능한 CLS 토큰
+cls_token = nn.Parameter(torch.randn(1, 1, D))
+
+# 배치 크기만큼 확장 후 시퀀스 앞에 추가
+cls_tokens = cls_token.expand(batch_size, -1, -1)
+# [batch, 1, D] + [batch, N, D] → [batch, N+1, D]
+z = torch.cat([cls_tokens, patch_embeddings], dim=1)</code></pre>
+          </details>
+
           <div class="viz-container">
             <h3>CLS 토큰 + 패치 임베딩 시퀀스</h3>
             <canvas id="cls-token-canvas" width="900" height="350"></canvas>
@@ -310,11 +529,58 @@
       <!-- 6. Transformer 인코더 -->
       <section id="section-encoder" class="section">
         <div class="section-inner">
-          <h1 class="section-title">Transformer 인코더</h1>
+          <h1 class="section-title">
+            <span data-term="encoder">Transformer 인코더</span>
+          </h1>
           <p class="section-desc">
-            ViT의 핵심 구조입니다. Layer Norm → Multi-Head Self-Attention → 잔차
-            연결 → Layer Norm → MLP → 잔차 연결의 구조가 L번 반복됩니다.
+            ViT의 핵심 구조입니다.
+            <span data-term="layer-norm">Layer Norm</span> →
+            <span data-term="multi-head-attention"
+              >Multi-Head Self-Attention</span
+            >
+            → <span data-term="residual-connection">잔차 연결</span> → Layer
+            Norm → <span data-term="mlp">MLP</span> → 잔차 연결의 구조가 L번
+            반복됩니다.
           </p>
+
+          <details class="why-panel">
+            <summary>💡 왜 여러 층을 쌓는가?</summary>
+            <div class="why-content">
+              <p>
+                <strong>계층적 특징 학습:</strong> 초기 레이어는 가장자리·
+                텍스처 같은 저수준 패턴을, 후반 레이어는 객체·장면 같은 고수준
+                의미를 학습합니다. 층을 쌓을수록 추상화 수준이 높아집니다.
+              </p>
+              <p>
+                <strong>Pre-Norm:</strong> ViT는 원래 Transformer(Post-Norm)와
+                달리 LayerNorm을 Attention/MLP <em>앞에</em> 적용합니다. 이로써
+                학습이 더 안정적으로 수렴합니다.
+              </p>
+            </div>
+          </details>
+
+          <details class="code-panel">
+            <summary>🐍 PyTorch 코드</summary>
+            <pre
+              class="code-block"
+            ><code id="encoder-code">import torch.nn as nn
+
+D = 768        # 임베딩 차원
+num_heads = 12 # 어텐션 헤드 수
+L = 12         # 인코더 레이어 수
+
+encoder_layer = nn.TransformerEncoderLayer(
+    d_model=D,
+    nhead=num_heads,
+    dim_feedforward=3072,  # 4 × D
+    activation='gelu',
+    norm_first=True  # Pre-Norm (ViT 스타일)
+)
+encoder = nn.TransformerEncoder(
+    encoder_layer, num_layers=L
+)</code></pre>
+          </details>
+
           <div class="control-row">
             <label
               >인코더 레이어 수 (L):
@@ -337,15 +603,16 @@
               <h3>Pre-Norm vs Post-Norm</h3>
               <p>
                 ViT는 원래 Transformer와 달리 <strong>Pre-Norm</strong>을
-                사용합니다. LayerNorm을 Attention/MLP 앞에 적용하여 학습
-                안정성을 높입니다.
+                사용합니다. <span data-term="layer-norm">LayerNorm</span>을
+                Attention/MLP 앞에 적용하여 학습 안정성을 높입니다.
               </p>
             </div>
             <div class="info-card">
               <h3>수식</h3>
-              <p class="formula-block">
-                z'ₗ = MSA(LN(zₗ₋₁)) + zₗ₋₁<br />
-                zₗ = MLP(LN(z'ₗ)) + z'ₗ
+              <p>
+                <span id="encoder-formula1" class="katex-formula"></span>
+                <br />
+                <span id="encoder-formula2" class="katex-formula"></span>
               </p>
             </div>
           </div>
@@ -355,19 +622,60 @@
       <!-- 7. Self-Attention 시각화 -->
       <section id="section-attention" class="section">
         <div class="section-inner">
-          <h1 class="section-title">Self-Attention 시각화</h1>
+          <h1 class="section-title">
+            <span data-term="self-attention">Self-Attention</span> 시각화
+          </h1>
           <p class="section-desc">
             Self-Attention은 ViT의 핵심입니다. 각 패치 토큰이 다른
             <strong>모든</strong> 패치에 대해 <em>"얼마나 관련 있는가?"</em>를
             계산하고, 그 관련도에 따라 정보를 가중 합산합니다. CNN과 달리 멀리
             떨어진 패치끼리도 한 번에 직접 정보를 교환할 수 있는 것이 핵심
             장점입니다.
+            <br />
+            <span id="attn-formula" class="katex-formula"></span>
           </p>
+
+          <details class="why-panel">
+            <summary>💡 왜 Self-Attention인가?</summary>
+            <div class="why-content">
+              <p>
+                <strong>전역 수용야:</strong> CNN의 합성곱 커널은 3×3 등 작은
+                영역만 봅니다. 먼 영역을 연결하려면 많은 층이 필요합니다.
+                Self-Attention은 모든 패치 쌍의 관계를 <em>한 번의 연산</em>으로
+                직접 모델링합니다.
+              </p>
+              <p>
+                <strong><span data-term="scaling">√d_k 스케일링</span>:</strong>
+                <span data-term="query">Q</span>·<span data-term="key">K</span
+                ><sup>T</sup>
+                내적 값이 차원 d_k에 비례하여 커지면
+                <span data-term="softmax">softmax</span>가 포화됩니다. √d_k로
+                나누어 안정적인 기울기를 유지합니다.
+              </p>
+            </div>
+          </details>
+
+          <details class="code-panel">
+            <summary>🐍 PyTorch 코드</summary>
+            <pre class="code-block"><code id="attn-code">import torch.nn as nn
+
+D = 768       # 임베딩 차원
+num_heads = 6 # 어텐션 헤드 수
+
+mha = nn.MultiheadAttention(
+    embed_dim=D,
+    num_heads=num_heads,
+    batch_first=True
+)
+# Q, K, V 모두 같은 입력 (Self-Attention)
+# 입력: [batch, N+1, D]
+attn_output, attn_weights = mha(z, z, z)</code></pre>
+          </details>
 
           <!-- Q / K / V / Multi-Head 설명 카드 -->
           <div class="info-cards" style="margin-bottom: 20px">
             <div class="info-card">
-              <h3>❓ Query (Q) — 질문</h3>
+              <h3>❓ <span data-term="query">Query (Q)</span> — 질문</h3>
               <p>
                 현재 토큰이 <em>"나는 어떤 정보가 필요한가?"</em>를 표현하는
                 벡터입니다. 슬라이더로 선택한 패치(또는 CLS)의 Q가 다른 모든
@@ -375,7 +683,7 @@
               </p>
             </div>
             <div class="info-card">
-              <h3>🔑 Key (K) — 열쇠</h3>
+              <h3>🔑 <span data-term="key">Key (K)</span> — 열쇠</h3>
               <p>
                 각 토큰이 <em>"나는 이런 정보를 가지고 있다"</em>고 알리는
                 벡터입니다. Q·K<sup>T</sup> 내적 값이 높을수록 두 토큰의 관계가
@@ -383,36 +691,28 @@
               </p>
             </div>
             <div class="info-card">
-              <h3>💡 Value (V) — 내용</h3>
+              <h3>💡 <span data-term="value">Value (V)</span> — 내용</h3>
               <p>
-                실제로 전달할 정보를 담은 벡터입니다. Softmax로 정규화된 어텐션
+                실제로 전달할 정보를 담은 벡터입니다.
+                <span data-term="softmax">Softmax</span>로 정규화된 어텐션
                 점수를 가중치로 삼아 모든 토큰의 V를 합산한 결과가 이 토큰의
                 새로운 표현이 됩니다.
               </p>
             </div>
             <div class="info-card">
-              <h3>🎯 Multi-Head — 다중 관점</h3>
+              <h3>
+                🎯 <span data-term="multi-head-attention">Multi-Head</span> —
+                다중 관점
+              </h3>
               <p>
                 헤드를 여럿 두면 각 헤드가 독립적으로 서로 다른 관계 패턴을
                 학습합니다. 아래 시뮬레이션에서 헤드 1–2는 <em>지역적</em>,
                 3–4는 <em>전역적</em>, 5–6은 <em>같은 행(가로)</em> 패턴을
                 나타냅니다.
+                <br />
+                <span id="mh-formula" class="katex-formula"></span>
               </p>
             </div>
-          </div>
-
-          <!-- 핵심 수식 -->
-          <div
-            class="formula-block"
-            style="margin-bottom: 24px; line-height: 2.2"
-          >
-            Attention(Q, K, V) = softmax( Q · K<sup>T</sup> / √d<sub>k</sub> ) ·
-            V
-            <br />
-            <span style="color: #a0a0b0; font-size: 0.82em">
-              d<sub>k</sub> : 키 벡터의 차원 — √d<sub>k</sub>로 나누어 내적 값이
-              너무 커지는 것을 방지(스케일드 닷-프로덕트)
-            </span>
           </div>
 
           <div class="control-row">
@@ -443,6 +743,17 @@
             </label>
           </div>
 
+          <div class="compare-toggle">
+            <button id="attn-compare-btn" class="btn">
+              ⚖ Scaling 유무 비교
+            </button>
+          </div>
+          <div
+            id="attn-compare"
+            class="compare-container"
+            style="display: none"
+          ></div>
+
           <div class="viz-row">
             <div class="viz-container viz-half">
               <h3>어텐션 맵 (막대 그래프)</h3>
@@ -454,8 +765,11 @@
                   margin-bottom: 12px;
                 "
               >
-                선택 패치(Query)가 각 토큰(Key)에 보내는 어텐션 가중치. 막대가
-                높을수록 해당 토큰에 더 많이 주목합니다.
+                선택 패치(<span data-term="query">Query</span>)가 각 토큰(<span
+                  data-term="key"
+                  >Key</span
+                >)에 보내는 어텐션 가중치. 막대가 높을수록 해당 토큰에 더 많이
+                주목합니다.
               </p>
               <canvas id="attn-map-canvas" width="400" height="400"></canvas>
             </div>
@@ -489,9 +803,10 @@
                 margin-bottom: 12px;
               "
             >
-              행 = Query 토큰, 열 = Key 토큰. 밝은 셀일수록 해당 행의 토큰이
-              해당 열 토큰을 강하게 참조합니다. 대각선이 밝으면 자기 자신을 많이
-              참조하는 패턴입니다.
+              행 = <span data-term="query">Query</span> 토큰, 열 =
+              <span data-term="key">Key</span> 토큰. 밝은 셀일수록 해당 행의
+              토큰이 해당 열 토큰을 강하게 참조합니다. 대각선이 밝으면 자기
+              자신을 많이 참조하는 패턴입니다.
             </p>
             <canvas id="attn-weights-canvas" width="900" height="350"></canvas>
           </div>
@@ -501,12 +816,56 @@
       <!-- 8. 분류 헤드 (MLP Head) -->
       <section id="section-mlp-head" class="section">
         <div class="section-inner">
-          <h1 class="section-title">분류 헤드 (MLP Head)</h1>
+          <h1 class="section-title">
+            분류 헤드 (<span data-term="mlp">MLP</span> Head)
+          </h1>
           <p class="section-desc">
-            Transformer 인코더의 출력 중 CLS 토큰 벡터만 추출하여 MLP Head를
-            통해 최종 클래스를 예측합니다.
-            <span class="formula">y = MLP(LN(z<sup>0</sup><sub>L</sub>))</span>
+            <span data-term="encoder">Transformer 인코더</span>의 출력 중
+            <span data-term="cls-token">CLS 토큰</span> 벡터만 추출하여 MLP
+            Head를 통해 최종 클래스를 예측합니다.
+            <br />
+            <span id="cls-formula" class="katex-formula"></span>
           </p>
+
+          <details class="why-panel">
+            <summary>💡 왜 CLS 토큰만 사용하는가?</summary>
+            <div class="why-content">
+              <p>
+                <strong>정보 집약:</strong> L개 인코더 레이어의
+                <span data-term="self-attention">Self-Attention</span>을 거치며
+                CLS 토큰은 모든 패치의 정보를 전역적으로 흡수합니다. 마지막
+                레이어의 CLS 출력은 이미지 전체를 요약한 벡터입니다.
+              </p>
+              <p>
+                <strong>Pre-training vs Fine-tuning:</strong> 사전학습 시에는
+                은닉층 + tanh 활성화를 포함한 MLP Head를 사용하고, 미세조정
+                시에는 단일 Linear 레이어로 교체하여
+                <span data-term="imagenet">ImageNet</span> 등의 클래스 수에
+                맞춥니다.
+              </p>
+            </div>
+          </details>
+
+          <details class="code-panel">
+            <summary>🐍 PyTorch 코드</summary>
+            <pre
+              class="code-block"
+            ><code id="mlp-head-code">import torch.nn as nn
+
+D = 768           # 임베딩 차원
+num_classes = 1000  # ImageNet 클래스 수
+
+# Fine-tuning: 단순 Linear Head
+head = nn.Sequential(
+    nn.LayerNorm(D),
+    nn.Linear(D, num_classes)
+)
+# CLS 토큰 출력 → 분류
+# z_L: [batch, N+1, D]
+cls_output = z_L[:, 0]  # [batch, D]
+logits = head(cls_output)  # [batch, 1000]</code></pre>
+          </details>
+
           <div class="viz-container">
             <canvas id="mlp-head-canvas" width="900" height="400"></canvas>
           </div>
@@ -522,7 +881,8 @@
               <h3>Fine-tuning</h3>
               <p>
                 미세조정 시: 단일 Linear Layer로 교체<br />
-                D차원 → 클래스 수(예: 1000 for ImageNet)
+                D차원 → 클래스 수(예: 1000 for
+                <span data-term="imagenet">ImageNet</span>)
               </p>
             </div>
           </div>

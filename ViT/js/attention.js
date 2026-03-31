@@ -41,15 +41,29 @@ export function initAttention() {
   const headVal = document.getElementById('attn-head-val');
   const headTypeEl = document.getElementById('attn-head-type');
 
-  const headTypeLabels = ['지역적', '전역적', '가로 패턴'];
-  const headTypeColors = ['#4fc3f7', '#81c784', '#ffb74d'];
+  let headTypeLabels = [
+    '지역적',
+    '전역적',
+    '행 패턴',
+    '대각선',
+    'CLS 집중',
+    '자기 참조',
+  ];
+  let headTypeColors = [
+    '#4fc3f7',
+    '#81c784',
+    '#ffb74d',
+    '#ce93d8',
+    '#ef5350',
+    '#90a4ae',
+  ];
+  let usingRealData = false;
 
   function updateHeadTypeBadge() {
     if (!headTypeEl) return;
     const h = parseInt(headSlider.value) - 1;
-    const type = h % 3;
-    headTypeEl.textContent = headTypeLabels[type];
-    headTypeEl.style.background = headTypeColors[type];
+    headTypeEl.textContent = headTypeLabels[h];
+    headTypeEl.style.background = headTypeColors[h];
   }
 
   if (!mapCanvas || !overlayCanvas || !weightsCanvas) return;
@@ -57,35 +71,65 @@ export function initAttention() {
   const gridSize = 3; // 3x3 패치 (교육용 단순화)
   const seqLen = gridSize * gridSize + 1; // +1 for CLS
 
-  // 여러 헤드의 어텐션 가중치 사전 생성
-  const headAttentions = [];
-  for (let h = 0; h < 6; h++) {
-    const rand = mulberry32(100 + h * 37);
-    const attnMatrix = [];
-    for (let i = 0; i < seqLen; i++) {
-      const row = [];
-      for (let j = 0; j < seqLen; j++) {
-        // 시뮬레이션: 가까운 패치에 더 높은 어텐션
-        let score = rand() * 2 - 1;
-        if (i === j) score += 2; // 자기 자신에게 높은 점수
-        if (i === 0 || j === 0) score += 0.5; // CLS 관련
-        if (i > 0 && j > 0) {
-          const ri = Math.floor((i - 1) / gridSize),
-            ci = (i - 1) % gridSize;
-          const rj = Math.floor((j - 1) / gridSize),
-            cj = (j - 1) % gridSize;
-          const dist = Math.abs(ri - rj) + Math.abs(ci - cj);
-          // 각 헤드마다 다른 패턴
-          if (h % 3 === 0) score += Math.max(0, 2 - dist); // 지역적
-          if (h % 3 === 1) score += dist * 0.3; // 전역적
-          if (h % 3 === 2) score += ri === rj ? 1.5 : 0; // 가로 패턴
+  // 폴백: 프로시저 생성 어텐션 가중치
+  function generateFallbackAttentions() {
+    const fallbackLabels = ['지역적', '전역적', '행 패턴'];
+    const fallbackColors = ['#4fc3f7', '#81c784', '#ffb74d'];
+    const atts = [];
+    for (let h = 0; h < 6; h++) {
+      const rand = mulberry32(100 + h * 37);
+      const attnMatrix = [];
+      for (let i = 0; i < seqLen; i++) {
+        const row = [];
+        for (let j = 0; j < seqLen; j++) {
+          let score = rand() * 2 - 1;
+          if (i === j) score += 2;
+          if (i === 0 || j === 0) score += 0.5;
+          if (i > 0 && j > 0) {
+            const ri = Math.floor((i - 1) / gridSize),
+              ci = (i - 1) % gridSize;
+            const rj = Math.floor((j - 1) / gridSize),
+              cj = (j - 1) % gridSize;
+            const dist = Math.abs(ri - rj) + Math.abs(ci - cj);
+            if (h % 3 === 0) score += Math.max(0, 2 - dist);
+            if (h % 3 === 1) score += dist * 0.3;
+            if (h % 3 === 2) score += ri === rj ? 1.5 : 0;
+          }
+          row.push(score);
         }
-        row.push(score);
+        attnMatrix.push(softmax(row));
       }
-      attnMatrix.push(softmax(row));
+      atts.push(attnMatrix);
     }
-    headAttentions.push(attnMatrix);
+    headTypeLabels = fallbackLabels.concat(fallbackLabels);
+    headTypeColors = fallbackColors.concat(fallbackColors);
+    return atts;
   }
+
+  // 실제 모델 데이터 로드 시도 → 성공 시 headAttentions 교체
+  let headAttentions = generateFallbackAttentions();
+
+  fetch('./js/data/attention_patterns.json')
+    .then((res) => (res.ok ? res.json() : Promise.reject()))
+    .then((data) => {
+      if (data.heads && data.heads.length === 6) {
+        headAttentions = data.heads.map((h) => h.weights);
+        headTypeLabels = data.heads.map((h) => h.name.replace(/\s*\(.*\)/, ''));
+        headTypeColors = [
+          '#4fc3f7',
+          '#81c784',
+          '#ffb74d',
+          '#ce93d8',
+          '#ef5350',
+          '#90a4ae',
+        ];
+        usingRealData = true;
+        renderAll();
+      }
+    })
+    .catch(() => {
+      /* 폴백 데이터 사용 */
+    });
 
   // 이미지 색상 (3x3 패치)
   const patchColors = [
@@ -119,9 +163,8 @@ export function initAttention() {
     const offsetY = 50;
 
     // 헤드 유형 부제 표시
-    const type = headIdx % 3;
-    const typeLabel = headTypeLabels[type];
-    const typeColor = headTypeColors[type];
+    const typeLabel = headTypeLabels[headIdx];
+    const typeColor = headTypeColors[headIdx];
 
     ctx.font = 'bold 12px "Noto Sans KR", sans-serif';
     ctx.fillStyle = '#e0e0e0';
@@ -268,7 +311,7 @@ export function initAttention() {
     const headIdx = parseInt(headSlider.value);
     headVal.textContent = `Head ${headIdx}`;
 
-    const hType = (headIdx - 1) % 3;
+    const hType = headIdx - 1;
     const typeLabel = headTypeLabels[hType];
     const typeColor = headTypeColors[hType];
 
@@ -370,6 +413,18 @@ export function initAttention() {
       W - 10,
       offsetY + seqLen * cellSize + 20,
     );
+
+    // 실제 모델 데이터 라벨
+    if (usingRealData) {
+      ctx.font = '9px "Noto Sans KR", sans-serif';
+      ctx.fillStyle = '#81c784';
+      ctx.textAlign = 'left';
+      ctx.fillText(
+        '📊 실제 학습된 ViT-Base/16 모델의 값입니다',
+        10,
+        offsetY + seqLen * cellSize + 20,
+      );
+    }
   }
 
   function renderAll() {
@@ -388,6 +443,136 @@ export function initAttention() {
   }
 
   patchSlider.addEventListener('input', renderAll);
-  headSlider.addEventListener('input', renderAll);
+  headSlider.addEventListener('input', () => {
+    renderAll();
+    if (window.__vitProgress) {
+      window.__vitProgress.save('section-attention');
+    }
+    // Code panel sync
+    const numHeads = parseInt(headSlider.value);
+    const codeEl = document.getElementById('attn-code');
+    if (codeEl) {
+      codeEl.textContent = `import torch.nn as nn
+
+D = 768       # 임베딩 차원
+num_heads = ${numHeads} # 어텐션 헤드 수
+
+mha = nn.MultiheadAttention(
+    embed_dim=D,
+    num_heads=${numHeads},
+    batch_first=True
+)
+# Q, K, V 모두 같은 입력 (Self-Attention)
+# 입력: [batch, N+1, D]
+attn_output, attn_weights = mha(z, z, z)`;
+    }
+  });
+
+  // ───── Compare Mode: Scaling 유무 비교 ─────
+  const compareBtn = document.getElementById('attn-compare-btn');
+  const compareContainer = document.getElementById('attn-compare');
+  let compareVisible = false;
+
+  if (compareBtn && compareContainer) {
+    compareBtn.addEventListener('click', () => {
+      compareVisible = !compareVisible;
+      compareContainer.style.display = compareVisible ? 'flex' : 'none';
+      compareBtn.textContent = compareVisible
+        ? '⚖ 비교 모드 닫기'
+        : '⚖ Scaling 유무 비교';
+      if (compareVisible) renderCompare();
+    });
+  }
+
+  function renderCompare() {
+    compareContainer.innerHTML = '';
+    const headIdx = parseInt(headSlider.value) - 1;
+    const d_k = 64; // 768 / 12 heads
+
+    // Generate raw scores (before softmax) for one row
+    const rand = mulberry32(200 + headIdx);
+    const rawScores = [];
+    for (let j = 0; j < seqLen; j++) {
+      let score = rand() * 4 - 1;
+      if (j === 0) score += 1;
+      rawScores.push(score * Math.sqrt(d_k)); // Simulate un-scaled scores
+    }
+
+    // No scaling: softmax(QK^T)
+    const noScaleWeights = softmax(rawScores);
+    // With scaling: softmax(QK^T / sqrt(d_k))
+    const scaledScores = rawScores.map((s) => s / Math.sqrt(d_k));
+    const scaledWeights = softmax(scaledScores);
+
+    const configs = [
+      {
+        label: '❌ Scaling 없음 (QK<sup>T</sup>)',
+        weights: noScaleWeights,
+        note: '⚠ softmax 가중치가 극단적 → 기울기 소실 위험',
+        noteColor: 'var(--accent)',
+      },
+      {
+        label: '✅ Scaling 적용 (QK<sup>T</sup> / √d<sub>k</sub>)',
+        weights: scaledWeights,
+        note: '✓ 부드러운 분포 → 안정적인 학습',
+        noteColor: 'var(--attn-color)',
+      },
+    ];
+
+    configs.forEach((cfg) => {
+      const side = document.createElement('div');
+      side.className = 'compare-side';
+      side.innerHTML = `<h4>${cfg.label}</h4>`;
+
+      // Mini bar chart
+      const canvas = document.createElement('canvas');
+      canvas.width = 350;
+      canvas.height = 200;
+      canvas.style.cssText = 'border-radius:8px;background:#0d1117;';
+      side.appendChild(canvas);
+
+      const ctx = canvas.getContext('2d');
+      const barW = (canvas.width - 40) / seqLen;
+      const maxBarH = 150;
+      const offsetY = 10;
+      const labels = [
+        'CLS',
+        ...Array.from({ length: seqLen - 1 }, (_, i) => `P${i + 1}`),
+      ];
+
+      for (let j = 0; j < seqLen; j++) {
+        const w = cfg.weights[j];
+        const barH = w * maxBarH;
+        const x = 20 + j * barW;
+
+        ctx.fillStyle = w > 0.3 ? '#EF5350' : '#4fc3f7';
+        ctx.fillRect(x + 2, offsetY + maxBarH - barH, barW - 4, barH);
+
+        ctx.font = '9px monospace';
+        ctx.fillStyle = '#e0e0e0';
+        ctx.textAlign = 'center';
+        ctx.fillText(w.toFixed(3), x + barW / 2, offsetY + maxBarH - barH - 4);
+
+        ctx.font = '8px sans-serif';
+        ctx.fillStyle = '#a0a0b0';
+        ctx.fillText(labels[j], x + barW / 2, offsetY + maxBarH + 14);
+      }
+
+      // Max weight info
+      const maxW = Math.max(...cfg.weights);
+      ctx.font = '10px monospace';
+      ctx.fillStyle = '#a0a0b0';
+      ctx.textAlign = 'left';
+      ctx.fillText(`max: ${maxW.toFixed(4)}`, 20, offsetY + maxBarH + 30);
+
+      const note = document.createElement('p');
+      note.style.cssText = `margin-top:8px;font-size:0.82rem;color:${cfg.noteColor};`;
+      note.textContent = cfg.note;
+      side.appendChild(note);
+
+      compareContainer.appendChild(side);
+    });
+  }
+
   renderAll();
 }
