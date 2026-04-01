@@ -1,0 +1,258 @@
+/* ===== AWS Cloud Animations ===== */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes awsPulse {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 4px rgba(255, 153, 0, 0.3));
+  }
+  50% {
+    filter: drop-shadow(0 0 12px rgba(255, 153, 0, 0.7));
+  }
+}
+
+@keyframes regionGlow {
+  0%,
+  100% {
+    box-shadow: 0 0 4px rgba(0, 164, 166, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 16px rgba(0, 164, 166, 0.6);
+  }
+}
+
+@keyframes scaleUp {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes podPulse {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes podTerminate {
+  from {
+    transform: scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+}
+
+@keyframes flowMove {
+  0% {
+    stroke-dashoffset: 40;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes tokenMove {
+  0% {
+    offset-distance: 0%;
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    offset-distance: 100%;
+    opacity: 0;
+  }
+}
+
+@keyframes networkPacket {
+  0% {
+    transform: translateX(0);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(100px);
+    opacity: 0;
+  }
+}
+
+@keyframes stateGlow {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 4px rgba(255, 153, 0, 0.3));
+  }
+  50% {
+    filter: drop-shadow(0 0 16px rgba(255, 153, 0, 0.7));
+  }
+}
+
+@keyframes barGrow {
+  from {
+    width: 0;
+  }
+}
+
+@keyframes arrowFlow {
+  0% {
+    stroke-dashoffset: 20;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes lambdaCold {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+    background: rgba(231, 21, 123, 0.3);
+  }
+  50% {
+    transform: scale(1.1);
+    background: rgba(231, 21, 123, 0.15);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+    background: rgba(63, 134, 36, 0.15);
+  }
+}
+
+@keyframes lambdaWarm {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes trafficFlow {
+  0% {
+    stroke-dashoffset: 200;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes azExpand {
+  from {
+    opacity: 0;
+    transform: scaleY(0);
+    transform-origin: top;
+  }
+  to {
+    opacity: 1;
+    transform: scaleY(1);
+    transform-origin: top;
+  }
+}
+
+@keyframes securityBlink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+@keyframes dataMove {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+}
+
+/* ===== Applied Animation Classes ===== */
+.aws-active {
+  animation: awsPulse 1.5s ease infinite;
+}
+
+.region-active {
+  animation: regionGlow 1.5s ease infinite;
+}
+
+.instance-launching {
+  animation: podPulse 0.5s ease forwards;
+}
+
+.instance-removing {
+  animation: podTerminate 0.5s ease forwards;
+}
+
+.flow-line {
+  stroke-dasharray: 40;
+  animation: flowMove 1s linear infinite;
+}
+
+.state-active {
+  animation: stateGlow 1.5s ease infinite;
+}
+
+.lambda-cold-start {
+  animation: lambdaCold 1s ease forwards;
+}
+
+.lambda-warm-start {
+  animation: lambdaWarm 0.3s ease forwards;
+}
+
+.traffic-trace {
+  stroke-dasharray: 200;
+  animation: trafficFlow 2s linear forwards;
+}

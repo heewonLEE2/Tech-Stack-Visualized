@@ -1,0 +1,797 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>머신러닝 기초 시각화</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"
+    />
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"
+    ></script>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/animations.css" />
+  </head>
+  <body>
+    <!-- 사이드바 네비게이션 -->
+    <nav id="sidebar">
+      <div class="sidebar-header">
+        <h2>ML 기초</h2>
+        <p class="sidebar-subtitle">Machine Learning Fundamentals</p>
+      </div>
+      <ul class="nav-list">
+        <li>
+          <a
+            href="#section-overview"
+            class="nav-link active"
+            data-section="section-overview"
+          >
+            <span class="nav-icon">◈</span> 전체 파이프라인
+            <span class="nav-check" data-progress="section-overview"></span>
+          </a>
+        </li>
+        <li>
+          <a
+            href="#section-regression"
+            class="nav-link"
+            data-section="section-regression"
+          >
+            <span class="nav-icon">⟋</span> 선형 회귀
+            <span class="nav-check" data-progress="section-regression"></span>
+          </a>
+        </li>
+        <li>
+          <a
+            href="#section-gradient"
+            class="nav-link"
+            data-section="section-gradient"
+          >
+            <span class="nav-icon">∇</span> 경사 하강법
+            <span class="nav-check" data-progress="section-gradient"></span>
+          </a>
+        </li>
+        <li>
+          <a
+            href="#section-classification"
+            class="nav-link"
+            data-section="section-classification"
+          >
+            <span class="nav-icon">◎</span> 분류
+            <span
+              class="nav-check"
+              data-progress="section-classification"
+            ></span>
+          </a>
+        </li>
+        <li>
+          <a
+            href="#section-overfitting"
+            class="nav-link"
+            data-section="section-overfitting"
+          >
+            <span class="nav-icon">∿</span> 과적합 / 정규화
+            <span class="nav-check" data-progress="section-overfitting"></span>
+          </a>
+        </li>
+        <li>
+          <a href="#section-tree" class="nav-link" data-section="section-tree">
+            <span class="nav-icon">🌳</span> 결정 트리
+            <span class="nav-check" data-progress="section-tree"></span>
+          </a>
+        </li>
+        <li>
+          <a
+            href="#section-ensemble"
+            class="nav-link"
+            data-section="section-ensemble"
+          >
+            <span class="nav-icon">⊕</span> 앙상블
+            <span class="nav-check" data-progress="section-ensemble"></span>
+          </a>
+        </li>
+        <li>
+          <a
+            href="#section-clustering"
+            class="nav-link"
+            data-section="section-clustering"
+          >
+            <span class="nav-icon">◉</span> 클러스터링
+            <span class="nav-check" data-progress="section-clustering"></span>
+          </a>
+        </li>
+        <li>
+          <a
+            href="#section-playground"
+            class="nav-link"
+            data-section="section-playground"
+          >
+            <span class="nav-icon">▶</span> 실전 플레이그라운드
+            <span class="nav-check" data-progress="section-playground"></span>
+          </a>
+        </li>
+      </ul>
+      <div class="sidebar-footer">
+        <button id="theme-toggle" class="theme-btn" title="테마 전환">
+          <span class="theme-icon">☀</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- 모바일 메뉴 버튼 -->
+    <button id="mobile-menu-btn" class="mobile-menu-btn" aria-label="메뉴 열기">
+      ☰
+    </button>
+
+    <!-- 메인 콘텐츠 -->
+    <main id="main-content">
+      <!-- 1. 전체 파이프라인 -->
+      <section id="section-overview" class="section">
+        <div class="section-inner">
+          <h1 class="section-title">머신러닝 전체 파이프라인</h1>
+          <p class="section-desc">
+            <span data-term="ml">Machine Learning</span>의 전체
+            워크플로우입니다. 각 블록을 클릭하면 해당 섹션으로 이동합니다.
+          </p>
+          <details class="why-panel">
+            <summary>💡 왜 머신러닝인가?</summary>
+            <div class="why-content">
+              <p>
+                <strong>규칙 기반의 한계:</strong> 전통 프로그래밍은 모든 규칙을
+                사람이 직접 작성해야 합니다. 이미지 인식, 자연어 처리 같은
+                복잡한 패턴은 명시적 규칙으로 표현이 <em>불가능</em>합니다.
+              </p>
+              <p>
+                <strong>데이터로부터 학습:</strong> ML은 데이터에서 패턴을
+                자동으로 추출합니다. 데이터가 많을수록, 더 정확한 모델을 만들 수
+                있습니다.
+              </p>
+            </div>
+          </details>
+          <div id="overview-container" class="viz-container"></div>
+        </div>
+      </section>
+
+      <!-- 2. 선형 회귀 -->
+      <section id="section-regression" class="section">
+        <div class="section-inner">
+          <h1 class="section-title">선형 회귀 (Linear Regression)</h1>
+          <p class="section-desc">
+            <span data-term="regression">회귀</span> 분석의 가장 기본 형태로,
+            데이터에 가장 잘 맞는 직선을 찾습니다.
+            <span id="regression-formula" class="katex-formula"></span>
+          </p>
+          <details class="why-panel">
+            <summary>💡 왜 선형 회귀인가?</summary>
+            <div class="why-content">
+              <p>
+                <strong>ML의 기초 중 기초:</strong> 모든 복잡한 모델(신경망,
+                트리 등)도 결국
+                <span data-term="loss">손실 함수</span> 최소화라는 같은 원리를
+                사용합니다. 선형 회귀는 이 원리를 가장 단순하게 보여줍니다.
+              </p>
+              <p>
+                <strong>해석 가능성:</strong> 기울기 w가 "입력이 1 증가할 때
+                출력의 변화량"을 직접 의미하므로,
+                <em>모델의 동작을 완벽히 이해</em>할 수 있습니다.
+              </p>
+            </div>
+          </details>
+          <div class="control-row">
+            <label
+              >기울기 (w):
+              <input
+                type="range"
+                id="reg-w-slider"
+                min="-3"
+                max="3"
+                step="0.1"
+                value="1"
+                class="slider"
+              />
+              <span id="reg-w-val">1.0</span>
+            </label>
+            <label
+              >절편 (b):
+              <input
+                type="range"
+                id="reg-b-slider"
+                min="-5"
+                max="5"
+                step="0.1"
+                value="0"
+                class="slider"
+              />
+              <span id="reg-b-val">0.0</span>
+            </label>
+            <button id="reg-fit-btn" class="btn btn-primary">
+              🎯 최적 피팅
+            </button>
+            <button id="reg-reset-btn" class="btn">↻ 초기화</button>
+          </div>
+          <div class="compare-toggle-row">
+            <button id="reg-compare-btn" class="btn btn-compare">
+              ⚖ 비교 모드: 수동 vs 최적
+            </button>
+          </div>
+          <div id="regression-container" class="viz-container"></div>
+          <div
+            id="reg-compare-container"
+            class="compare-container"
+            style="display: none"
+          ></div>
+          <details class="code-panel">
+            <summary>🐍 scikit-learn 코드</summary>
+            <pre
+              class="code-block"
+            ><code id="reg-code">from sklearn.linear_model import LinearRegression
+
+model = LinearRegression()
+model.fit(X_train, y_train)
+# w = model.coef_[0], b = model.intercept_
+predictions = model.predict(X_test)</code></pre>
+          </details>
+        </div>
+      </section>
+
+      <!-- 3. 경사 하강법 -->
+      <section id="section-gradient" class="section">
+        <div class="section-inner">
+          <h1 class="section-title">경사 하강법 (Gradient Descent)</h1>
+          <p class="section-desc">
+            <span data-term="gradient-descent">경사 하강법</span>은
+            <span data-term="loss">손실 함수</span>의 기울기를 따라 파라미터를
+            업데이트하여 최적값을 찾는 알고리즘입니다.
+            <span id="gd-formula" class="katex-formula"></span>
+          </p>
+          <details class="why-panel">
+            <summary>💡 왜 경사 하강법인가?</summary>
+            <div class="why-content">
+              <p>
+                <strong>닫힌 해가 없는 경우:</strong> 선형 회귀는 수학적
+                해(정규방정식)가 존재하지만, 대부분의 ML/DL 모델은
+                <em>해석적 해가 없습니다</em>. 반복적 최적화가 유일한
+                방법입니다.
+              </p>
+              <p>
+                <strong>확장성:</strong> 수백만 개의 파라미터도 그래디언트만
+                계산할 수 있으면 최적화할 수 있어, 딥러닝의 핵심 엔진입니다.
+              </p>
+            </div>
+          </details>
+          <div class="tab-bar" id="gd-algo-tabs">
+            <button class="tab-btn active" data-algo="sgd">SGD</button>
+            <button class="tab-btn" data-algo="momentum">Momentum</button>
+            <button class="tab-btn" data-algo="adam">Adam</button>
+          </div>
+          <div class="control-row">
+            <label
+              >Learning Rate (η):
+              <input
+                type="range"
+                id="gd-lr-slider"
+                min="-3"
+                max="0"
+                step="0.1"
+                value="-2"
+                class="slider"
+              />
+              <span id="gd-lr-val">0.010</span>
+            </label>
+            <label
+              >속도:
+              <input
+                type="range"
+                id="gd-speed-slider"
+                min="0.5"
+                max="3"
+                step="0.5"
+                value="1"
+                class="slider"
+              />
+              <span id="gd-speed-val">1x</span>
+            </label>
+          </div>
+          <div class="control-row">
+            <button id="gd-play" class="btn btn-primary">▶ 재생</button>
+            <button id="gd-pause" class="btn" disabled>⏸ 일시정지</button>
+            <button id="gd-step" class="btn">▶ 한 스텝</button>
+            <button id="gd-reset" class="btn">↻ 초기화</button>
+          </div>
+          <div class="compare-toggle-row">
+            <button id="gd-compare-btn" class="btn btn-compare">
+              ⚖ 비교 모드: lr=0.01 vs lr=0.5
+            </button>
+          </div>
+          <div id="gradient-container" class="viz-container"></div>
+          <div
+            id="gd-compare-container"
+            class="compare-container"
+            style="display: none"
+          ></div>
+          <details class="code-panel">
+            <summary>🐍 PyTorch 코드</summary>
+            <pre
+              class="code-block"
+            ><code id="gd-code">optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
+
+for epoch in range(100):
+    loss = criterion(model(X), y)
+    optimizer.zero_grad()
+    loss.backward()
+    optimizer.step()</code></pre>
+          </details>
+        </div>
+      </section>
+
+      <!-- 4. 분류 -->
+      <section id="section-classification" class="section">
+        <div class="section-inner">
+          <h1 class="section-title">분류 (Classification)</h1>
+          <p class="section-desc">
+            <span data-term="classification">분류</span>는 입력 데이터를
+            이산적인 <span data-term="class">클래스</span>로 나누는 문제입니다.
+            <span data-term="logistic-regression">로지스틱 회귀</span>는 가장
+            기본적인 이진 분류 모델입니다.
+          </p>
+          <details class="why-panel">
+            <summary>💡 왜 분류인가?</summary>
+            <div class="why-content">
+              <p>
+                <strong>현실의 의사결정:</strong> 스팸/정상 메일, 양성/악성
+                종양, 정상/사기 거래 등 현실의 많은 문제가
+                <em>분류 문제</em>입니다.
+              </p>
+              <p>
+                <strong>확률적 해석:</strong> Sigmoid 함수를 통해 출력을 0~1
+                확률로 변환하므로, "얼마나 확신하는가"를 알 수 있습니다.
+              </p>
+            </div>
+          </details>
+          <div class="control-row">
+            <label
+              >Threshold:
+              <input
+                type="range"
+                id="cls-threshold-slider"
+                min="0"
+                max="1"
+                step="0.05"
+                value="0.5"
+                class="slider"
+              />
+              <span id="cls-threshold-val">0.50</span>
+            </label>
+          </div>
+          <div id="classification-container" class="viz-container"></div>
+          <details class="code-panel">
+            <summary>🐍 scikit-learn 코드</summary>
+            <pre
+              class="code-block"
+            ><code id="cls-code">from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import confusion_matrix
+
+model = LogisticRegression()
+model.fit(X_train, y_train)
+y_pred = model.predict(X_test)
+cm = confusion_matrix(y_test, y_pred)</code></pre>
+          </details>
+        </div>
+      </section>
+
+      <!-- 5. 과적합 / 정규화 -->
+      <section id="section-overfitting" class="section">
+        <div class="section-inner">
+          <h1 class="section-title">
+            과적합과 정규화 (Overfitting & Regularization)
+          </h1>
+          <p class="section-desc">
+            모델이 학습 데이터에 <span data-term="overfitting">과적합</span>되면
+            새로운 데이터에 일반화하지 못합니다.
+            <span data-term="regularization">정규화</span>로 이를 방지합니다.
+          </p>
+          <details class="why-panel">
+            <summary>💡 왜 정규화인가?</summary>
+            <div class="why-content">
+              <p>
+                <strong>복잡한 모델의 위험:</strong> 파라미터가 많을수록 학습
+                데이터를 완벽히 외울 수 있지만, <em>노이즈까지 학습</em>하여 새
+                데이터에서 성능이 급락합니다.
+              </p>
+              <p>
+                <strong>오캄의 면도날:</strong> 정규화는 가중치를 작게 유지하여
+                모델의 복잡도를 제한합니다. "같은 성능이면 더 단순한 모델이
+                낫다"는 원칙입니다.
+              </p>
+            </div>
+          </details>
+          <div class="control-row">
+            <label
+              >다항식 차수 (degree):
+              <input
+                type="range"
+                id="of-degree-slider"
+                min="1"
+                max="15"
+                value="3"
+                class="slider"
+              />
+              <span id="of-degree-val">3</span>
+            </label>
+            <label
+              >정규화 강도 (λ):
+              <input
+                type="range"
+                id="of-lambda-slider"
+                min="0"
+                max="2"
+                step="0.05"
+                value="0"
+                class="slider"
+              />
+              <span id="of-lambda-val">0.00</span>
+            </label>
+          </div>
+          <div class="tab-bar" id="of-reg-tabs">
+            <button class="tab-btn active" data-reg="none">정규화 없음</button>
+            <button class="tab-btn" data-reg="l2">L2 (Ridge)</button>
+            <button class="tab-btn" data-reg="l1">L1 (Lasso)</button>
+          </div>
+          <div id="overfitting-container" class="viz-container"></div>
+          <details class="code-panel">
+            <summary>🐍 scikit-learn 코드</summary>
+            <pre
+              class="code-block"
+            ><code id="of-code">from sklearn.preprocessing import PolynomialFeatures
+from sklearn.linear_model import Ridge, Lasso
+
+poly = PolynomialFeatures(degree=3)
+X_poly = poly.fit_transform(X)
+
+model = Ridge(alpha=1.0)  # L2 정규화
+# model = Lasso(alpha=1.0)  # L1 정규화
+model.fit(X_poly, y)</code></pre>
+          </details>
+        </div>
+      </section>
+
+      <!-- 6. 결정 트리 -->
+      <section id="section-tree" class="section">
+        <div class="section-inner">
+          <h1 class="section-title">결정 트리 (Decision Tree)</h1>
+          <p class="section-desc">
+            데이터를 <span data-term="decision-tree">결정 트리</span>로
+            분류합니다. 각 노드에서 최적의 분할 조건을 찾아
+            <span data-term="gini">Gini 불순도</span>를 최소화합니다.
+          </p>
+          <details class="why-panel">
+            <summary>💡 왜 결정 트리인가?</summary>
+            <div class="why-content">
+              <p>
+                <strong>해석 가능성:</strong> "나이 > 30이고 소득 > 5000이면
+                승인"처럼 <em>if-else 규칙</em>으로 읽을 수 있어 비전문가도
+                이해할 수 있습니다.
+              </p>
+              <p>
+                <strong>전처리 불필요:</strong> 스케일링, 정규화 없이 원시
+                데이터를 그대로 사용할 수 있습니다. 범주형/수치형 혼합 데이터도
+                처리합니다.
+              </p>
+            </div>
+          </details>
+          <div class="control-row">
+            <label
+              >최대 깊이 (max_depth):
+              <input
+                type="range"
+                id="tree-depth-slider"
+                min="1"
+                max="8"
+                value="3"
+                class="slider"
+              />
+              <span id="tree-depth-val">3</span>
+            </label>
+          </div>
+          <div class="tab-bar" id="tree-criterion-tabs">
+            <button class="tab-btn active" data-criterion="gini">Gini</button>
+            <button class="tab-btn" data-criterion="entropy">Entropy</button>
+          </div>
+          <div class="control-row">
+            <label
+              >속도:
+              <input
+                type="range"
+                id="tree-speed-slider"
+                min="0.5"
+                max="3"
+                step="0.5"
+                value="1"
+                class="slider"
+              />
+              <span id="tree-speed-val">1x</span>
+            </label>
+            <button id="tree-play" class="btn btn-primary">▶ 성장 재생</button>
+            <button id="tree-reset" class="btn">↻ 초기화</button>
+          </div>
+          <div id="tree-container" class="viz-container"></div>
+          <details class="code-panel">
+            <summary>🐍 scikit-learn 코드</summary>
+            <pre
+              class="code-block"
+            ><code id="tree-code">from sklearn.tree import DecisionTreeClassifier
+
+tree = DecisionTreeClassifier(
+    max_depth=3, criterion='gini'
+)
+tree.fit(X_train, y_train)
+accuracy = tree.score(X_test, y_test)</code></pre>
+          </details>
+        </div>
+      </section>
+
+      <!-- 7. 앙상블 -->
+      <section id="section-ensemble" class="section">
+        <div class="section-inner">
+          <h1 class="section-title">앙상블 (Ensemble Methods)</h1>
+          <p class="section-desc">
+            여러 약한 모델을 결합하여 강한 모델을 만드는
+            <span data-term="ensemble">앙상블</span> 기법입니다.
+            <span data-term="bagging">배깅</span>과
+            <span data-term="boosting">부스팅</span>을 비교합니다.
+          </p>
+          <details class="why-panel">
+            <summary>💡 왜 앙상블인가?</summary>
+            <div class="why-content">
+              <p>
+                <strong>다양성의 힘:</strong> 각 모델이 서로 다른 실수를
+                저지르면, 다수결로 <em>개별 모델보다 더 정확한</em> 결과를
+                얻습니다.
+              </p>
+              <p>
+                <strong>실전 최강:</strong> Kaggle 대회에서 거의 모든 우승
+                모델이 앙상블을 사용합니다. Random Forest와 XGBoost는 정형
+                데이터의 표준입니다.
+              </p>
+            </div>
+          </details>
+          <div class="tab-bar" id="ens-method-tabs">
+            <button class="tab-btn active" data-method="bagging">
+              Bagging (Random Forest)
+            </button>
+            <button class="tab-btn" data-method="boosting">
+              Boosting (AdaBoost)
+            </button>
+          </div>
+          <div class="control-row">
+            <label
+              >모델 수 (n_estimators):
+              <input
+                type="range"
+                id="ens-n-slider"
+                min="1"
+                max="20"
+                value="5"
+                class="slider"
+              />
+              <span id="ens-n-val">5</span>
+            </label>
+            <label
+              >속도:
+              <input
+                type="range"
+                id="ens-speed-slider"
+                min="0.5"
+                max="3"
+                step="0.5"
+                value="1"
+                class="slider"
+              />
+              <span id="ens-speed-val">1x</span>
+            </label>
+          </div>
+          <div class="control-row">
+            <button id="ens-play" class="btn btn-primary">▶ 재생</button>
+            <button id="ens-pause" class="btn" disabled>⏸ 일시정지</button>
+            <button id="ens-step" class="btn">▶ 다음 모델</button>
+            <button id="ens-reset" class="btn">↻ 초기화</button>
+          </div>
+          <div class="compare-toggle-row">
+            <button id="ens-compare-btn" class="btn btn-compare">
+              ⚖ 비교 모드: 단일 트리 vs 앙상블
+            </button>
+          </div>
+          <div id="ensemble-container" class="viz-container"></div>
+          <div
+            id="ens-compare-container"
+            class="compare-container"
+            style="display: none"
+          ></div>
+          <details class="code-panel">
+            <summary>🐍 scikit-learn 코드</summary>
+            <pre
+              class="code-block"
+            ><code id="ens-code">from sklearn.ensemble import RandomForestClassifier
+
+rf = RandomForestClassifier(
+    n_estimators=5, max_depth=3
+)
+rf.fit(X_train, y_train)
+accuracy = rf.score(X_test, y_test)</code></pre>
+          </details>
+        </div>
+      </section>
+
+      <!-- 8. 클러스터링 -->
+      <section id="section-clustering" class="section">
+        <div class="section-inner">
+          <h1 class="section-title">클러스터링 (Clustering)</h1>
+          <p class="section-desc">
+            레이블 없이 데이터의 자연스러운 그룹을 찾는
+            <span data-term="unsupervised">비지도 학습</span>입니다.
+            <span data-term="kmeans">K-Means</span>의 반복 과정을 단계별로
+            시각화합니다.
+          </p>
+          <details class="why-panel">
+            <summary>💡 왜 클러스터링인가?</summary>
+            <div class="why-content">
+              <p>
+                <strong>레이블이 없을 때:</strong> 고객 세분화, 문서 주제 분류,
+                이상 탐지 등 정답 레이블이 없는 데이터에서도
+                <em>의미 있는 구조</em>를 발견할 수 있습니다.
+              </p>
+              <p>
+                <strong>데이터 이해:</strong> 클러스터링은 데이터 탐색의 첫
+                단계로, "어떤 패턴이 있는가?"를 먼저 파악하는 데 유용합니다.
+              </p>
+            </div>
+          </details>
+          <div class="control-row">
+            <label
+              >클러스터 수 (k):
+              <input
+                type="range"
+                id="km-k-slider"
+                min="2"
+                max="8"
+                value="3"
+                class="slider"
+              />
+              <span id="km-k-val">3</span>
+            </label>
+            <label
+              >속도:
+              <input
+                type="range"
+                id="km-speed-slider"
+                min="0.5"
+                max="3"
+                step="0.5"
+                value="1"
+                class="slider"
+              />
+              <span id="km-speed-val">1x</span>
+            </label>
+          </div>
+          <div class="tab-bar" id="km-init-tabs">
+            <button class="tab-btn active" data-init="random">
+              Random 초기화
+            </button>
+            <button class="tab-btn" data-init="kmpp">K-Means++</button>
+          </div>
+          <div class="control-row">
+            <button id="km-play" class="btn btn-primary">▶ 재생</button>
+            <button id="km-pause" class="btn" disabled>⏸ 일시정지</button>
+            <button id="km-step" class="btn">▶ 한 스텝</button>
+            <button id="km-reset" class="btn">↻ 초기화</button>
+          </div>
+          <div id="clustering-container" class="viz-container"></div>
+          <details class="code-panel">
+            <summary>🐍 scikit-learn 코드</summary>
+            <pre
+              class="code-block"
+            ><code id="km-code">from sklearn.cluster import KMeans
+
+kmeans = KMeans(n_clusters=3, init='k-means++')
+kmeans.fit(X)
+labels = kmeans.labels_
+centroids = kmeans.cluster_centers_</code></pre>
+          </details>
+        </div>
+      </section>
+
+      <!-- 9. 플레이그라운드 -->
+      <section id="section-playground" class="section">
+        <div class="section-inner">
+          <h1 class="section-title">실전 플레이그라운드</h1>
+          <p class="section-desc">
+            다양한 데이터셋과 모델을 자유롭게 조합하여 결정 경계를 확인합니다.
+          </p>
+          <details class="why-panel">
+            <summary>💡 왜 플레이그라운드인가?</summary>
+            <div class="why-content">
+              <p>
+                <strong>직관 형성:</strong> 같은 데이터에 서로 다른 모델을
+                적용해 보면, <em>각 모델의 강점과 한계</em>를 직관적으로 이해할
+                수 있습니다.
+              </p>
+              <p>
+                <strong>하이퍼파라미터 감각:</strong> k, depth, C 같은
+                하이퍼파라미터를 조절하며 결정 경계의 변화를 즉시 확인할 수
+                있습니다.
+              </p>
+            </div>
+          </details>
+          <div class="control-row">
+            <label
+              >데이터셋:
+              <select id="pg-dataset" class="styled-select">
+                <option value="circles">Circles (원형)</option>
+                <option value="moons">Moons (반달형)</option>
+                <option value="blobs">Blobs (클러스터)</option>
+                <option value="xor">XOR (배타적)</option>
+              </select>
+            </label>
+            <label
+              >노이즈:
+              <input
+                type="range"
+                id="pg-noise-slider"
+                min="0"
+                max="0.5"
+                step="0.05"
+                value="0.15"
+                class="slider"
+              />
+              <span id="pg-noise-val">0.15</span>
+            </label>
+            <label
+              >Train/Test 비율:
+              <input
+                type="range"
+                id="pg-split-slider"
+                min="0.1"
+                max="0.5"
+                step="0.05"
+                value="0.2"
+                class="slider"
+              />
+              <span id="pg-split-val">0.20</span>
+            </label>
+          </div>
+          <div class="tab-bar" id="pg-model-tabs">
+            <button class="tab-btn active" data-model="linear">Linear</button>
+            <button class="tab-btn" data-model="tree">Decision Tree</button>
+            <button class="tab-btn" data-model="knn">KNN</button>
+            <button class="tab-btn" data-model="svm">SVM</button>
+          </div>
+          <div class="control-row" id="pg-hyperparam-row">
+            <!-- 모델별 하이퍼파라미터가 동적으로 삽입됨 -->
+          </div>
+          <div id="playground-container" class="viz-container"></div>
+          <details class="code-panel">
+            <summary>🐍 scikit-learn 코드</summary>
+            <pre
+              class="code-block"
+            ><code id="pg-code">from sklearn.datasets import make_circles
+from sklearn.model_selection import train_test_split
+
+X, y = make_circles(n_samples=200, noise=0.15)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)</code></pre>
+          </details>
+        </div>
+      </section>
+    </main>
+
+    <!-- 툴팁 -->
+    <div id="tooltip" class="tooltip" style="display: none"></div>
+
+    <script type="module" src="js/main.js"></script>
+  </body>
+</html>

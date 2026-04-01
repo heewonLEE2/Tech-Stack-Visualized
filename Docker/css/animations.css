@@ -1,0 +1,263 @@
+/* ===== Docker & K8s Animations ===== */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes containerPulse {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 4px rgba(38, 198, 218, 0.3));
+  }
+  50% {
+    filter: drop-shadow(0 0 12px rgba(38, 198, 218, 0.7));
+  }
+}
+
+@keyframes imageBuild {
+  from {
+    transform: scaleY(0);
+    transform-origin: bottom;
+    opacity: 0;
+  }
+  to {
+    transform: scaleY(1);
+    transform-origin: bottom;
+    opacity: 1;
+  }
+}
+
+@keyframes layerStack {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes podPulse {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes podTerminate {
+  from {
+    transform: scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+}
+
+@keyframes flowMove {
+  0% {
+    stroke-dashoffset: 40;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes tokenMove {
+  0% {
+    offset-distance: 0%;
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    offset-distance: 100%;
+    opacity: 0;
+  }
+}
+
+@keyframes networkPacket {
+  0% {
+    transform: translateX(0);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(100px);
+    opacity: 0;
+  }
+}
+
+@keyframes stateGlow {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 4px rgba(36, 150, 237, 0.3));
+  }
+  50% {
+    filter: drop-shadow(0 0 16px rgba(36, 150, 237, 0.7));
+  }
+}
+
+@keyframes scaleUp {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes arrowFlow {
+  0% {
+    stroke-dashoffset: 20;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes rollingIn {
+  from {
+    transform: translateY(-20px) scale(0.8);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes rollingOut {
+  from {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(20px) scale(0.8);
+    opacity: 0;
+  }
+}
+
+@keyframes composeSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes k8sTrace {
+  0% {
+    stroke-dashoffset: 200;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes hpaScale {
+  0%,
+  100% {
+    transform: scaleX(1);
+  }
+  50% {
+    transform: scaleX(1.05);
+  }
+}
+
+@keyframes barGrow {
+  from {
+    width: 0;
+  }
+}
+
+@keyframes serviceConnect {
+  from {
+    stroke-dashoffset: 30;
+    opacity: 0;
+  }
+  to {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+
+/* Applied animation classes */
+.container-active {
+  animation: containerPulse 1.5s ease infinite;
+}
+
+.layer-building {
+  animation: layerStack 0.4s ease forwards;
+}
+
+.pod-creating {
+  animation: podPulse 0.5s ease forwards;
+}
+
+.pod-removing {
+  animation: podTerminate 0.5s ease forwards;
+}
+
+.flow-line {
+  stroke-dasharray: 40;
+  animation: flowMove 1s linear infinite;
+}
+
+.state-active {
+  animation: stateGlow 1.5s ease infinite;
+}
+
+.k8s-trace-line {
+  stroke-dasharray: 200;
+  animation: k8sTrace 2s ease forwards;
+}
+
+.service-line {
+  stroke-dasharray: 30;
+  animation: serviceConnect 0.8s ease forwards;
+}
+
+.bar-animated {
+  animation: barGrow 0.8s ease forwards;
+}

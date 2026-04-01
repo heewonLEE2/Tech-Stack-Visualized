@@ -1,0 +1,766 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AWS Cloud 서비스 시각화</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"
+    />
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"
+    ></script>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/animations.css" />
+  </head>
+  <body>
+    <!-- 사이드바 네비게이션 -->
+    <nav id="sidebar">
+      <div class="sidebar-header">
+        <h2>AWS Cloud</h2>
+        <p class="sidebar-subtitle">Amazon Web Services</p>
+      </div>
+      <ul class="nav-list">
+        <li>
+          <a
+            href="#section-overview"
+            class="nav-link active"
+            data-section="section-overview"
+          >
+            <span class="nav-icon">◈</span> 전체 파이프라인
+            <span class="nav-check" data-progress="section-overview"></span>
+          </a>
+        </li>
+        <li>
+          <a
+            href="#section-global-infra"
+            class="nav-link"
+            data-section="section-global-infra"
+          >
+            <span class="nav-icon">🌍</span> 글로벌 인프라
+            <span class="nav-check" data-progress="section-global-infra"></span>
+          </a>
+        </li>
+        <li>
+          <a href="#section-iam" class="nav-link" data-section="section-iam">
+            <span class="nav-icon">🔐</span> IAM
+            <span class="nav-check" data-progress="section-iam"></span>
+          </a>
+        </li>
+        <li>
+          <a href="#section-vpc" class="nav-link" data-section="section-vpc">
+            <span class="nav-icon">🔗</span> VPC &amp; 네트워킹
+            <span class="nav-check" data-progress="section-vpc"></span>
+          </a>
+        </li>
+        <li>
+          <a
+            href="#section-compute"
+            class="nav-link"
+            data-section="section-compute"
+          >
+            <span class="nav-icon">🖥</span> EC2 &amp; 컴퓨팅
+            <span class="nav-check" data-progress="section-compute"></span>
+          </a>
+        </li>
+        <li>
+          <a
+            href="#section-storage"
+            class="nav-link"
+            data-section="section-storage"
+          >
+            <span class="nav-icon">📦</span> S3 &amp; 스토리지
+            <span class="nav-check" data-progress="section-storage"></span>
+          </a>
+        </li>
+        <li>
+          <a
+            href="#section-database"
+            class="nav-link"
+            data-section="section-database"
+          >
+            <span class="nav-icon">🗄</span> 데이터베이스
+            <span class="nav-check" data-progress="section-database"></span>
+          </a>
+        </li>
+        <li>
+          <a
+            href="#section-serverless"
+            class="nav-link"
+            data-section="section-serverless"
+          >
+            <span class="nav-icon">⚡</span> 서버리스
+            <span class="nav-check" data-progress="section-serverless"></span>
+          </a>
+        </li>
+      </ul>
+      <div class="sidebar-footer">
+        <button id="theme-toggle" class="theme-btn" title="테마 전환">
+          <span class="theme-icon">☀</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- 모바일 메뉴 버튼 -->
+    <button id="mobile-menu-btn" class="mobile-menu-btn" aria-label="메뉴 열기">
+      ☰
+    </button>
+
+    <!-- 메인 콘텐츠 -->
+    <main id="main-content">
+      <!-- 1. 전체 파이프라인 Overview -->
+      <section id="section-overview" class="section">
+        <div class="section-inner">
+          <h1 class="section-title">AWS Cloud 전체 아키텍처</h1>
+          <p class="section-desc">
+            클라이언트 요청이
+            <span data-term="route53">Route 53</span>(DNS)을 거쳐
+            <span data-term="cloudfront">CloudFront</span>(CDN)로 전달되고,
+            <span data-term="alb">ALB</span>가 트래픽을 분산하여
+            <span data-term="ec2">EC2</span> 또는
+            <span data-term="lambda">Lambda</span>에서 처리한 뒤,
+            <span data-term="rds">RDS</span> /
+            <span data-term="dynamodb">DynamoDB</span>에서 데이터를 조회하고
+            <span data-term="s3">S3</span>에 저장하는 전체 흐름입니다. 각 블록을
+            클릭하면 해당 섹션으로 이동합니다.
+          </p>
+          <details class="why-panel">
+            <summary>💡 왜 클라우드를 쓰는가?</summary>
+            <div class="why-content">
+              <p>
+                <strong>탄력성(Elasticity):</strong> 트래픽 급증 시
+                <em>자동으로 리소스를 확장</em>하고, 감소 시 축소하여 비용을
+                최적화합니다.
+              </p>
+              <p>
+                <strong>글로벌 확장:</strong> 전 세계
+                <em>30개 이상의 리전</em>에서 수 분 만에 서비스를 배포할 수
+                있습니다.
+              </p>
+              <p>
+                <strong>운영 부담 감소:</strong> 하드웨어 관리, 패치, 백업 등을
+                AWS가 대신 처리하여 <em>비즈니스 로직에 집중</em>할 수 있습니다.
+              </p>
+            </div>
+          </details>
+          <div class="control-row">
+            <button id="overview-play" class="btn btn-primary">
+              ▶ 흐름 재생
+            </button>
+            <button id="overview-reset" class="btn">↻ 초기화</button>
+            <label
+              >속도:
+              <input
+                type="range"
+                id="overview-speed"
+                min="0.5"
+                max="3"
+                step="0.5"
+                value="1"
+                class="slider"
+              />
+              <span id="overview-speed-val">1x</span>
+            </label>
+          </div>
+          <div id="overview-container" class="viz-container"></div>
+        </div>
+      </section>
+
+      <!-- 2. 글로벌 인프라 -->
+      <section id="section-global-infra" class="section">
+        <div class="section-inner">
+          <h1 class="section-title">글로벌 인프라스트럭처</h1>
+          <p class="section-desc">
+            AWS는 전 세계
+            <span data-term="region">리전(Region)</span>에 분산 배치된
+            <span data-term="az">가용 영역(AZ)</span>으로 구성됩니다. 각 리전은
+            물리적으로 격리된 2~6개의 AZ를 포함하며,
+            <span data-term="edge-location">엣지 로케이션</span>은
+            <span data-term="cloudfront">CloudFront</span> CDN을 통해 콘텐츠를
+            사용자 가까이 전달합니다.
+          </p>
+          <details class="why-panel">
+            <summary>💡 왜 리전과 AZ를 이해해야 하나?</summary>
+            <div class="why-content">
+              <p>
+                <strong>지연시간:</strong> 사용자와 가까운 리전을 선택하면
+                <em>네트워크 지연을 최소화</em>합니다.
+              </p>
+              <p>
+                <strong>고가용성:</strong> 다중 AZ에 배포하면 하나의 데이터센터
+                장애에도 <em>서비스가 중단되지 않습니다</em>.
+              </p>
+              <p>
+                <strong>규정 준수:</strong> 데이터 주권 법률에 따라
+                <em>특정 리전에 데이터를 보관</em>해야 할 수 있습니다.
+              </p>
+            </div>
+          </details>
+          <div class="control-row">
+            <span class="control-label">배포 모드:</span>
+            <button class="btn preset-btn active" data-infra="single">
+              단일 AZ
+            </button>
+            <button class="btn preset-btn" data-infra="multi">다중 AZ</button>
+            <button class="btn preset-btn" data-infra="multi-region">
+              다중 리전
+            </button>
+          </div>
+          <div id="global-infra-container" class="viz-container"></div>
+          <details class="code-panel">
+            <summary>☁ AWS CLI</summary>
+            <pre
+              class="code-block"
+            ><code id="infra-code"># 사용 가능한 리전 목록
+aws ec2 describe-regions --output table
+
+# 특정 리전의 가용 영역 확인
+aws ec2 describe-availability-zones \
+  --region ap-northeast-2
+
+# CloudFront 엣지 로케이션 확인
+aws cloudfront list-distributions</code></pre>
+          </details>
+        </div>
+      </section>
+
+      <!-- 3. IAM -->
+      <section id="section-iam" class="section">
+        <div class="section-inner">
+          <h1 class="section-title">IAM (Identity &amp; Access Management)</h1>
+          <p class="section-desc">
+            <span data-term="iam">IAM</span>은 AWS 리소스에 대한
+            <span data-term="authentication">인증</span>과
+            <span data-term="authorization">인가</span>를 관리합니다.
+            <span data-term="iam-user">사용자</span>,
+            <span data-term="iam-group">그룹</span>,
+            <span data-term="iam-role">역할</span>,
+            <span data-term="iam-policy">정책</span>의 계층 구조를 통해
+            <em>최소 권한 원칙</em>을 적용합니다.
+          </p>
+          <details class="why-panel">
+            <summary>💡 왜 IAM이 중요한가?</summary>
+            <div class="why-content">
+              <p>
+                <strong>보안 기본:</strong> 모든 AWS 접근은 IAM을 통해 인증되며,
+                <em>잘못된 IAM 설정이 보안 사고의 주요 원인</em>입니다.
+              </p>
+              <p>
+                <strong>최소 권한 원칙:</strong> 필요한 권한만 부여하면
+                <em>피해 범위를 최소화</em>할 수 있습니다.
+              </p>
+              <p>
+                <strong>감사 추적:</strong>
+                <span data-term="cloudtrail">CloudTrail</span>과 연동하여
+                <em>누가 언제 무엇을 했는지</em> 추적할 수 있습니다.
+              </p>
+            </div>
+          </details>
+          <div class="control-row">
+            <button id="iam-play" class="btn btn-primary">
+              ▶ 정책 평가 흐름
+            </button>
+            <button id="iam-reset" class="btn">↻ 초기화</button>
+          </div>
+          <div class="compare-toggle-row">
+            <button id="iam-compare-btn" class="btn btn-compare">
+              ⚖ 비교 모드: 최소 권한 vs 과도 권한
+            </button>
+          </div>
+          <div id="iam-container" class="viz-container"></div>
+          <div
+            id="iam-compare-container"
+            class="compare-container"
+            style="display: none"
+          ></div>
+          <details class="code-panel">
+            <summary>☁ AWS CLI</summary>
+            <pre class="code-block"><code id="iam-code"># IAM 사용자 생성
+aws iam create-user --user-name developer
+
+# 그룹에 사용자 추가
+aws iam add-user-to-group \
+  --user-name developer --group-name dev-team
+
+# 정책 연결 (S3 읽기 전용)
+aws iam attach-user-policy \
+  --user-name developer \
+  --policy-arn arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+
+# 역할 생성 (EC2용)
+aws iam create-role \
+  --role-name EC2-S3-Access \
+  --assume-role-policy-document file://trust-policy.json
+
+# 현재 자격 증명 확인
+aws sts get-caller-identity</code></pre>
+          </details>
+        </div>
+      </section>
+
+      <!-- 4. VPC & 네트워킹 -->
+      <section id="section-vpc" class="section">
+        <div class="section-inner">
+          <h1 class="section-title">VPC &amp; 네트워킹</h1>
+          <p class="section-desc">
+            <span data-term="vpc">VPC</span>는 AWS 클라우드 내에서 논리적으로
+            격리된 가상 네트워크입니다. <span data-term="subnet">서브넷</span>,
+            <span data-term="igw">인터넷 게이트웨이</span>,
+            <span data-term="nat-gw">NAT 게이트웨이</span>,
+            <span data-term="sg">보안 그룹</span>,
+            <span data-term="nacl">NACL</span>을 조합하여 세밀한 네트워크
+            아키텍처를 설계합니다.
+          </p>
+          <details class="why-panel">
+            <summary>💡 왜 VPC가 필요한가?</summary>
+            <div class="why-content">
+              <p>
+                <strong>네트워크 격리:</strong> 리소스를 외부로부터
+                <em>논리적으로 격리</em>하여 보안을 강화합니다.
+              </p>
+              <p>
+                <strong>세밀한 제어:</strong> 서브넷, 라우팅 테이블, 보안
+                그룹으로 <em>트래픽 흐름을 정밀하게 제어</em>합니다.
+              </p>
+              <p>
+                <strong>다중 계층 아키텍처:</strong> Public/Private 서브넷을
+                분리하여
+                <em>웹 서버와 DB 서버의 보안 수준을 차등 적용</em>합니다.
+              </p>
+            </div>
+          </details>
+          <div class="control-row">
+            <button id="vpc-trace" class="btn btn-primary">
+              ▶ 트래픽 흐름 추적
+            </button>
+            <button id="vpc-reset" class="btn">↻ 초기화</button>
+          </div>
+          <div class="tab-bar">
+            <button class="tab-btn active" data-vpc-tab="architecture">
+              🏗 아키텍처
+            </button>
+            <button class="tab-btn" data-vpc-tab="security">
+              🛡 SG vs NACL
+            </button>
+          </div>
+          <div id="vpc-container" class="viz-container"></div>
+          <details class="code-panel">
+            <summary>☁ AWS CLI</summary>
+            <pre class="code-block"><code id="vpc-code"># VPC 생성 (10.0.0.0/16)
+aws ec2 create-vpc --cidr-block 10.0.0.0/16
+
+# 퍼블릭 서브넷 생성
+aws ec2 create-subnet \
+  --vpc-id vpc-xxx --cidr-block 10.0.1.0/24 \
+  --availability-zone ap-northeast-2a
+
+# 프라이빗 서브넷 생성
+aws ec2 create-subnet \
+  --vpc-id vpc-xxx --cidr-block 10.0.2.0/24 \
+  --availability-zone ap-northeast-2a
+
+# 인터넷 게이트웨이 생성 & 연결
+aws ec2 create-internet-gateway
+aws ec2 attach-internet-gateway \
+  --internet-gateway-id igw-xxx --vpc-id vpc-xxx
+
+# 보안 그룹 생성
+aws ec2 create-security-group \
+  --group-name web-sg --description "Web Server SG" \
+  --vpc-id vpc-xxx
+
+# 인바운드 규칙 추가 (HTTP 허용)
+aws ec2 authorize-security-group-ingress \
+  --group-id sg-xxx --protocol tcp \
+  --port 80 --cidr 0.0.0.0/0</code></pre>
+          </details>
+        </div>
+      </section>
+
+      <!-- 5. EC2 & 컴퓨팅 -->
+      <section id="section-compute" class="section">
+        <div class="section-inner">
+          <h1 class="section-title">EC2 &amp; 컴퓨팅</h1>
+          <p class="section-desc">
+            <span data-term="ec2">EC2</span>는 AWS의 핵심 컴퓨팅 서비스입니다.
+            <span data-term="instance-type">인스턴스 타입</span>을 선택하고,
+            <span data-term="asg">Auto Scaling Group</span>으로 자동 확장/축소를
+            설정하며, <span data-term="elb">Elastic Load Balancer</span>로
+            트래픽을 분산합니다.
+          </p>
+          <details class="why-panel">
+            <summary>💡 왜 Auto Scaling인가?</summary>
+            <div class="why-content">
+              <p>
+                <strong>가용성:</strong> 인스턴스 장애 시
+                <em>자동으로 새 인스턴스를 시작</em>하여 서비스 연속성을
+                보장합니다.
+              </p>
+              <p>
+                <strong>비용 최적화:</strong> 트래픽이 적을 때는 인스턴스를 줄여
+                <em>불필요한 비용을 절감</em>합니다.
+              </p>
+              <p>
+                <strong>무중단 배포:</strong> ELB와 결합하면
+                <em>새 인스턴스로 점진적으로 트래픽을 전환</em>하여 다운타임
+                없이 배포할 수 있습니다.
+              </p>
+            </div>
+          </details>
+          <div class="control-row">
+            <span class="control-label">트래픽 수준:</span>
+            <input
+              type="range"
+              id="compute-traffic"
+              min="1"
+              max="10"
+              value="3"
+              class="slider"
+            />
+            <span id="compute-traffic-val">3</span>
+          </div>
+          <div class="control-row">
+            <button id="compute-play" class="btn btn-primary">
+              ▶ Auto Scaling 시뮬레이션
+            </button>
+            <button id="compute-reset" class="btn">↻ 초기화</button>
+            <label
+              >속도:
+              <input
+                type="range"
+                id="compute-speed"
+                min="0.5"
+                max="3"
+                step="0.5"
+                value="1"
+                class="slider"
+              />
+              <span id="compute-speed-val">1x</span>
+            </label>
+          </div>
+          <div class="compare-toggle-row">
+            <button id="compute-compare-btn" class="btn btn-compare">
+              ⚖ 비교 모드: 단일 인스턴스 vs ASG + ELB
+            </button>
+          </div>
+          <div id="compute-container" class="viz-container"></div>
+          <div
+            id="compute-compare-container"
+            class="compare-container"
+            style="display: none"
+          ></div>
+          <details class="code-panel">
+            <summary>☁ AWS CLI</summary>
+            <pre class="code-block"><code id="compute-code"># EC2 인스턴스 시작
+aws ec2 run-instances \
+  --image-id ami-0c55b159cbfafe1f0 \
+  --instance-type t3.micro \
+  --key-name my-key --count 1
+
+# Auto Scaling Group 생성
+aws autoscaling create-auto-scaling-group \
+  --auto-scaling-group-name my-asg \
+  --launch-template LaunchTemplateName=my-lt \
+  --min-size 2 --max-size 10 --desired-capacity 3 \
+  --vpc-zone-identifier "subnet-xxx,subnet-yyy"
+
+# 대상 추적 스케일링 정책
+aws autoscaling put-scaling-policy \
+  --auto-scaling-group-name my-asg \
+  --policy-name cpu-target-tracking \
+  --policy-type TargetTrackingScaling \
+  --target-tracking-configuration \
+    "PredefinedMetricSpecification={PredefinedMetricType=ASGAverageCPUUtilization},TargetValue=50.0"
+
+# ALB 생성
+aws elbv2 create-load-balancer \
+  --name my-alb --type application \
+  --subnets subnet-xxx subnet-yyy</code></pre>
+          </details>
+        </div>
+      </section>
+
+      <!-- 6. S3 & 스토리지 -->
+      <section id="section-storage" class="section">
+        <div class="section-inner">
+          <h1 class="section-title">S3 &amp; 스토리지</h1>
+          <p class="section-desc">
+            <span data-term="s3">Amazon S3</span>는 무제한 확장이 가능한 객체
+            스토리지 서비스입니다.
+            <span data-term="storage-class">스토리지 클래스</span>를 선택하여
+            비용을 최적화하고,
+            <span data-term="lifecycle-policy">라이프사이클 정책</span>으로
+            데이터의 자동 이동과 만료를 관리합니다.
+          </p>
+          <details class="why-panel">
+            <summary>💡 왜 스토리지 클래스를 구분하나?</summary>
+            <div class="why-content">
+              <p>
+                <strong>비용 최적화:</strong> 자주 접근하는 데이터와 아카이브
+                데이터의 <em>저장 비용이 최대 95% 차이</em>납니다.
+              </p>
+              <p>
+                <strong>자동화:</strong> 라이프사이클 정책으로
+                <em>시간 경과에 따라 자동으로 저렴한 클래스로 이동</em>합니다.
+              </p>
+              <p>
+                <strong>내구성:</strong> 모든 S3 클래스는
+                <em>99.999999999%(11 Nine) 내구성</em>을 보장합니다.
+              </p>
+            </div>
+          </details>
+          <div class="control-row">
+            <button id="storage-play" class="btn btn-primary">
+              ▶ 라이프사이클 시뮬레이션
+            </button>
+            <button id="storage-reset" class="btn">↻ 초기화</button>
+            <label
+              >속도:
+              <input
+                type="range"
+                id="storage-speed"
+                min="0.5"
+                max="3"
+                step="0.5"
+                value="1"
+                class="slider"
+              />
+              <span id="storage-speed-val">1x</span>
+            </label>
+          </div>
+          <div id="storage-container" class="viz-container"></div>
+          <details class="code-panel">
+            <summary>☁ AWS CLI</summary>
+            <pre class="code-block"><code id="storage-code"># S3 버킷 생성
+aws s3 mb s3://my-bucket-name \
+  --region ap-northeast-2
+
+# 파일 업로드
+aws s3 cp myfile.txt s3://my-bucket-name/
+
+# 스토리지 클래스 지정하여 업로드
+aws s3 cp archive.zip s3://my-bucket-name/ \
+  --storage-class GLACIER
+
+# 라이프사이클 정책 설정
+aws s3api put-bucket-lifecycle-configuration \
+  --bucket my-bucket-name \
+  --lifecycle-configuration '{
+    "Rules": [{
+      "ID": "MoveToIA",
+      "Status": "Enabled",
+      "Transitions": [{
+        "Days": 30,
+        "StorageClass": "STANDARD_IA"
+      }, {
+        "Days": 90,
+        "StorageClass": "GLACIER"
+      }]
+    }]
+  }'
+
+# 버킷 내용 조회
+aws s3 ls s3://my-bucket-name/ --recursive</code></pre>
+          </details>
+        </div>
+      </section>
+
+      <!-- 7. 데이터베이스 -->
+      <section id="section-database" class="section">
+        <div class="section-inner">
+          <h1 class="section-title">데이터베이스 서비스</h1>
+          <p class="section-desc">
+            AWS는 용도에 맞는 다양한 관리형 데이터베이스를 제공합니다.
+            <span data-term="rds">RDS</span>(관계형),
+            <span data-term="dynamodb">DynamoDB</span>(NoSQL),
+            <span data-term="elasticache">ElastiCache</span>(인메모리 캐시)의
+            아키텍처와 사용 사례를 비교합니다.
+          </p>
+          <details class="why-panel">
+            <summary>💡 왜 관리형 DB인가?</summary>
+            <div class="why-content">
+              <p>
+                <strong>운영 부담 감소:</strong> 패치, 백업, 복제 등을
+                <em>AWS가 자동으로 처리</em>합니다.
+              </p>
+              <p>
+                <strong>고가용성:</strong> Multi-AZ 배포로
+                <em>자동 장애 조치(Failover)</em>를 지원합니다.
+              </p>
+              <p>
+                <strong>읽기 확장:</strong> Read Replica를 추가하여
+                <em>읽기 트래픽을 수평 확장</em>할 수 있습니다.
+              </p>
+            </div>
+          </details>
+          <div class="tab-bar">
+            <button class="tab-btn active" data-db-tab="rds">
+              🗃 RDS (관계형)
+            </button>
+            <button class="tab-btn" data-db-tab="dynamodb">
+              ⚡ DynamoDB (NoSQL)
+            </button>
+            <button class="tab-btn" data-db-tab="elasticache">
+              💨 ElastiCache
+            </button>
+          </div>
+          <div class="control-row">
+            <button id="db-play" class="btn btn-primary">
+              ▶ 요청 흐름 시뮬레이션
+            </button>
+            <button id="db-reset" class="btn">↻ 초기화</button>
+          </div>
+          <div class="compare-toggle-row">
+            <button id="db-compare-btn" class="btn btn-compare">
+              ⚖ 비교 모드: 단일 DB vs Read Replica
+            </button>
+          </div>
+          <div id="database-container" class="viz-container"></div>
+          <div
+            id="db-compare-container"
+            class="compare-container"
+            style="display: none"
+          ></div>
+          <details class="code-panel">
+            <summary>☁ AWS CLI</summary>
+            <pre
+              class="code-block"
+            ><code id="db-code"># RDS MySQL 인스턴스 생성 (Multi-AZ)
+aws rds create-db-instance \
+  --db-instance-identifier my-db \
+  --db-instance-class db.t3.micro \
+  --engine mysql --master-username admin \
+  --master-user-password secret123 \
+  --allocated-storage 20 --multi-az
+
+# Read Replica 생성
+aws rds create-db-instance-read-replica \
+  --db-instance-identifier my-db-replica \
+  --source-db-instance-identifier my-db
+
+# DynamoDB 테이블 생성
+aws dynamodb create-table \
+  --table-name Users \
+  --attribute-definitions \
+    AttributeName=userId,AttributeType=S \
+  --key-schema \
+    AttributeName=userId,KeyType=HASH \
+  --billing-mode PAY_PER_REQUEST
+
+# ElastiCache Redis 클러스터 생성
+aws elasticache create-cache-cluster \
+  --cache-cluster-id my-cache \
+  --engine redis \
+  --cache-node-type cache.t3.micro \
+  --num-cache-nodes 1</code></pre>
+          </details>
+        </div>
+      </section>
+
+      <!-- 8. 서버리스 -->
+      <section id="section-serverless" class="section">
+        <div class="section-inner">
+          <h1 class="section-title">서버리스 아키텍처</h1>
+          <p class="section-desc">
+            <span data-term="lambda">Lambda</span>는 서버 관리 없이 코드를
+            실행하는 서버리스 컴퓨팅 서비스입니다.
+            <span data-term="api-gw">API Gateway</span>로 HTTP 엔드포인트를
+            생성하고, <span data-term="step-functions">Step Functions</span>로
+            워크플로우를 오케스트레이션합니다. 이벤트 드리븐 아키텍처의
+            핵심입니다.
+          </p>
+          <details class="why-panel">
+            <summary>💡 왜 서버리스인가?</summary>
+            <div class="why-content">
+              <p>
+                <strong>운영 부담 제거:</strong> OS 패치, 스케일링, 가용성을
+                <em>AWS가 100% 관리</em>합니다.
+              </p>
+              <p>
+                <strong>이벤트 단위 과금:</strong> 요청이 없으면 비용이 0원이며,
+                <em>실행 시간(ms) 단위로만 과금</em>됩니다.
+              </p>
+              <p>
+                <strong>자동 확장:</strong> 동시 요청 수에 따라
+                <em>수천 개의 함수가 병렬로 실행</em>됩니다.
+              </p>
+            </div>
+          </details>
+          <div class="control-row">
+            <button id="serverless-play" class="btn btn-primary">
+              ▶ 요청 흐름 재생
+            </button>
+            <button id="serverless-reset" class="btn">↻ 초기화</button>
+            <label
+              >동시 요청:
+              <input
+                type="range"
+                id="serverless-concurrency"
+                min="1"
+                max="10"
+                value="1"
+                class="slider"
+              />
+              <span id="serverless-concurrency-val">1</span>
+            </label>
+          </div>
+          <div class="compare-toggle-row">
+            <button id="serverless-compare-btn" class="btn btn-compare">
+              ⚖ 비교 모드: 전통 서버 vs 서버리스
+            </button>
+          </div>
+          <div id="serverless-container" class="viz-container"></div>
+          <div
+            id="serverless-compare-container"
+            class="compare-container"
+            style="display: none"
+          ></div>
+          <details class="code-panel">
+            <summary>☁ AWS CLI</summary>
+            <pre
+              class="code-block"
+            ><code id="serverless-code"># Lambda 함수 생성
+aws lambda create-function \
+  --function-name my-api \
+  --runtime python3.12 \
+  --handler lambda_function.handler \
+  --role arn:aws:iam::123456789012:role/lambda-role \
+  --zip-file fileb://function.zip
+
+# API Gateway REST API 생성
+aws apigateway create-rest-api \
+  --name "My API" \
+  --description "Serverless API"
+
+# Step Functions 상태 머신 생성
+aws stepfunctions create-state-machine \
+  --name "OrderWorkflow" \
+  --definition file://workflow.json \
+  --role-arn arn:aws:iam::123456789012:role/step-role
+
+# Lambda 함수 호출 테스트
+aws lambda invoke \
+  --function-name my-api \
+  --payload '{"key": "value"}' \
+  output.json
+
+# CloudWatch 로그 확인
+aws logs filter-log-events \
+  --log-group-name /aws/lambda/my-api</code></pre>
+          </details>
+        </div>
+      </section>
+    </main>
+
+    <!-- 글로벌 툴팁 -->
+    <div id="tooltip" class="tooltip" style="display: none"></div>
+
+    <script type="module" src="js/main.js"></script>
+  </body>
+</html>
